@@ -1,20 +1,16 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import * as React from "react"
+import { ThemeProvider } from "react-native-rapi-ui";
+import Navigator from "./navigation/main";
+import { enableScreens } from "react-native-screens";
 
-export default function App() {
+console.disableYellowBox = true;
+
+export default () => {
+  enableScreens();
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    <ThemeProvider theme="dark">
+      <Navigator />
+    </ThemeProvider>
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
