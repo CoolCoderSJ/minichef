@@ -49,9 +49,9 @@ export default App = () => {
         />
         <ScrollView>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Recipes")}>
             <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Home"}</Text>
+              <Text fontWeight="medium">{"Recipes"}</Text>
               <Ionicons
                 name="chevron-forward"
                 size={20}
@@ -71,9 +71,9 @@ export default App = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Insulin")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Grocery Lists")}>
             <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Insulin"}</Text>
+              <Text fontWeight="medium">{"Grocery Lists"}</Text>
               <Ionicons
                 name="chevron-forward"
                 size={20}
@@ -82,9 +82,9 @@ export default App = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Recipes")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Unit Conversion")}>
             <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Recipes"}</Text>
+              <Text fontWeight="medium">{"Unit Conversion"}</Text>
               <Ionicons
                 name="chevron-forward"
                 size={20}
@@ -96,17 +96,6 @@ export default App = () => {
           <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
             <View style={styles.listItem}>
               <Text fontWeight="medium">{"Settings"}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate("Pen")}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Insulin Pen"}</Text>
               <Ionicons
                 name="chevron-forward"
                 size={20}
