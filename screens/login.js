@@ -54,14 +54,18 @@ export default Login = () => {
     catch {}
 
     try { 
+      await account.deleteSessions();
+    }
+    catch {}
+
+    try { 
       await account.createEmailPasswordSession(email, password);
-      await login(email, password);
       let details = await account.get();
       setObj("login", {id: details['$id']})
       navigation.navigate('app')
     }
     catch (err) {
-      setErorrs({
+      setErrors({
         ...errors,
         name: err
       })
@@ -86,7 +90,7 @@ export default Login = () => {
     validate()
       .then(function (check) {
         if (check) {
-          register(username, password)
+          register(formData.username, formData.password)
         }
         else {
           return false
