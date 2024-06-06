@@ -29,7 +29,10 @@ account = new Account(client);
 
 // Initialize database methods
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
+const setPlain = async (key, value) => { try { await AsyncStorage.setItem(key, value) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
+const delkey = async (key, value) => { try { await AsyncStorage.removeItem(key) } catch (e) { console.log(e) } }
+const getAll = async () => { try { const keys = await AsyncStorage.getAllKeys(); return keys } catch (error) { console.error(error) } }
 
 
 // Create the login screen function
@@ -64,7 +67,8 @@ export default Login = () => {
     try { 
       await account.createEmailPasswordSession(email, password);
       let details = await account.get();
-      setObj("login", {id: details['$id']})
+      console.log("DETAILS", details)
+      setPlain("login", details['$id'])
       setLoading(false)
       navigation.navigate('app')
     }

@@ -8,7 +8,7 @@ import React from "react";
 import App from "../../screens/index";
 import Login from "../../screens/login";
 
-// import HomeScreen from '../../screens/home';
+import Ingredients from '../../screens/ingredients';
 
 
 // Create the navigation stack
@@ -26,7 +26,7 @@ const Main = () => {
         <MainStack.Screen name="login" component={Login} />
         <MainStack.Screen name="app" component={App} />
 
-        {/* <MainStack.Screen name="Home" component={HomeScreen} /> */}
+        <MainStack.Screen name="Ingredients" component={Ingredients} />
 
       </MainStack.Navigator>
     </NavigationContainer>
