@@ -8,6 +8,7 @@ import React from "react";
 import App from "../../screens/index";
 import Login from "../../screens/login";
 
+import Recipes from '../../screens/recipes';
 import Ingredients from '../../screens/ingredients';
 
 
@@ -26,6 +27,7 @@ const Main = () => {
         <MainStack.Screen name="login" component={Login} />
         <MainStack.Screen name="app" component={App} />
 
+        <MainStack.Screen name="Recipes" component={Recipes} />
         <MainStack.Screen name="Ingredients" component={Ingredients} />
 
       </MainStack.Navigator>
