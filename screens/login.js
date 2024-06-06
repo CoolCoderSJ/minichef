@@ -10,6 +10,7 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import { Client, Account, ID } from 'react-native-appwrite';
+import Dialog from "react-native-dialog";
 
 // Disable warnings that aren't important
 console.disableYellowBox = true;
@@ -39,7 +40,9 @@ export default Login = () => {
 
   // Initialize state
   const [formData, setData] = React.useState({});
-  const [errors, setErrors] = React.useState({});
+  const [error, setError] = React.useState('');
+  const [dialogVisible, setDialogVisible] = React.useState(false);
+  const [isLoading, setLoading] = React.useState(false);
 
   get("login").then(result => {
     if (result) {
@@ -62,45 +65,69 @@ export default Login = () => {
       await account.createEmailPasswordSession(email, password);
       let details = await account.get();
       setObj("login", {id: details['$id']})
+      setLoading(false)
       navigation.navigate('app')
     }
     catch (err) {
-      setErrors({
-        ...errors,
-        name: err
-      })
+      setLoading(false)
+      setError(String(err))
+      setDialogVisible(true)
     }
   }
 
-
   const validate = async () => {
     if (formData.username === undefined || formData.password === undefined) {
-      setErrors({
-        ...errors,
-        name: 'Both fields are required',
-      });
+      setLoading(false)
+      setError('Both fields are required')
+      setDialogVisible(true)
       return false;
     }
 
     return "ok"
   }
 
-  // When the user submits the form, validate the credentials
   const onLogin = () => {
+    setLoading(true);
     validate()
       .then(function (check) {
         if (check) {
           register(formData.username, formData.password)
         }
         else {
+          setLoading(false)
           return false
         }
       })
   };
 
+  const closeDialog = () => {
+    setDialogVisible(false)
+  }
 
   return (
     <Layout>
+    {isLoading &&
+      <View flex={1} px="3" style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}>
+        <Text color={isDarkmode ? themeColor.white100 : themeColor.dark} size="h2">
+          Loading...
+        </Text>
+      </View>
+    }
+
+    {!isLoading &&
+    <Layout>
+      <Dialog.Container visible={dialogVisible}>
+        <Dialog.Title>Error</Dialog.Title>
+        <Dialog.Description>
+          {error}
+        </Dialog.Description>
+        <Dialog.Button label="OK" onPress={closeDialog} />
+    </Dialog.Container>
+
       <TopNav
         leftAction={() => navigation.goBack()}
         middleContent="Login"
@@ -109,7 +136,7 @@ export default Login = () => {
         <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
           <SectionContent>
             <View style={{ marginBottom: 20 }}>
-              <Text style={{ marginBottom: 10 }}>{errors.name ? errors['name'] : "Enter an email"}</Text>
+              <Text style={{ marginBottom: 10 }}>Enter an email</Text>
 
               <TextInput
                 placeholder="Enter an email address"
@@ -118,7 +145,7 @@ export default Login = () => {
             </View>
             <View style={{ marginBottom: 20 }}>
               <Text style={{ marginBottom: 10 }}>
-                {errors.name ? errors['name'] : "Enter your password"}
+                Enter a password
               </Text>
 
               <TextInput
@@ -146,6 +173,8 @@ export default Login = () => {
           </SectionContent>
         </Section>
       </ScrollView>
+    </Layout>
+    }
     </Layout>
   );
 }
