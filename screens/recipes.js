@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
 import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions } from "react-native";
-import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Button, Layout, Section, SectionContent, Text,
@@ -12,6 +11,8 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Permission, Role } from "react-native-appwrite";
+
+import Autocomplete from '../components/autocomplete';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -168,7 +169,7 @@ export default function Recipes() {
   .then (() => {
     let filter = []
     for (let i = 0; i < carbFood.length; i++) {
-      filter.push({ id: String(i + 1), title: carbFood[i] });
+      filter.push(carbFood[i]);
     }
     setFilterList(filter);
     setMealsList(carbFood);
@@ -329,107 +330,38 @@ export default function Recipes() {
                 </SectionContent>
               </Section>
 
-              {console.log("filterList", filterList)}
               {fields.map((field, idx) => {
                 return (
                   <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
                       <View>
-                        <AutocompleteDropdown
-                          textInputProps={{
-                            onChangeText: e => {
-                              handleChange(idx, "ing", e);
-                              let meals = [];
+                      <Autocomplete 
+                      data={filterList} 
+                      placeholder="Start typing to search ingredients..." 
+                      value={field.ing}
+                      onSelect={(item) => {
+                        if (item) {
 
-                              if (mealDB) {
-                                for (let i = 0; i < mealDB.length; i++) {
-                                  if (mealDB[i].includes(e)) {
-                                    meals.push({ id: String(i + 1), title: mealDB[i] });
-                                  }
-                                }
+                          let mealObj = undefined;
 
-                                console.log("meals", meals)
-                              }
+                          for (let i = 0; i < mealsList.length; i++) {
+                            if (mealsList[i] === item) {
+                              mealObj = mealsList[i]
+                              let fieldset = fields
 
-                              setFilterList(meals);
-                              console.log("changed", filterList)
-                              forceUpdate()
-                            },
-                            value: field.ing,
-                            placeholder: "Ingredient Name",
-                            style: {
-                              color: isDarkmode ? themeColor.white : themeColor.dark,
-                              backgroundColor: "#262834",
-                              borderColor: "#60647e",
-                              borderWidth: 1,
-                              borderRadius: 8,
-                              paddingHorizontal: 20,
-                              fontFamily: "Ubuntu_400Regular"
+                              fieldset[idx]['serving'] = "1"
+                              setFields(fieldset)
                             }
-                          }}
-
-                          rightButtonsContainerStyle={{
-                            backgroundColor: "#262834",
-                            borderColor: "#60647e",
-                            borderTopRightRadius: 8,
-                            borderBottomRightRadius: 8,
-                            borderTopWidth: 1,
-                            borderBottomWidth: 1,
-                            borderRightWidth: 1
-                          }}
-                          suggestionsListContainerStyle={{
-                            // backgroundColor: isDarkmode ? "#262834" : themeColor.white,
-                            color: isDarkmode ? themeColor.white : themeColor.dark,
-                            elevation: 10,
-                            zIndex: 10,
-                          }}
-                          containerStyle={{ 
-                            flexGrow: 1, flexShrink: 1, width: "100%", backgroundColor: "#262834"
-                           }}
-                          suggestionsListMaxHeight={Dimensions.get('window').height * 0.15}
-                          renderItem={(item, text) => 
-                            <Text style={{ color: themeColor.white, padding: 15, zIndex: 15, elevation: 15 }} key={ item.id }>{item.title}</Text>
                           }
-                          showClear={true}
-                          useFilter={false}
-                          clearOnFocus={false}
-                          closeOnBlur={false}
-                          closeOnSubmit={true}
-                          dataSet={filterList}
-                          onClear={() => handleRemove(idx)}
-                          onSelectItem={(item) => {
-                            if (item) {
 
-                              let mealObj = undefined;
+                          if (!mealObj) {
+                            return
+                          }
 
-                              for (let i = 0; i < mealsList.length; i++) {
-                                if (mealsList[i] === item.title) {
-                                  mealObj = mealsList[i]
-                                  let fieldset = fields
-
-                                  fieldset[idx]['serving'] = "1"
-                                  setFields(fieldset)
-                                }
-                              }
-
-                              if (!mealObj) {
-                                return
-                              }
-
-                              handleChange(idx, "ing", item.title);
-
-
-                              let ing = [];
-
-                              db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
-                                for (let i = 0; i < result.documents.length; i++) {
-                                  ing.push({ id: String(i + 1), title: result.documents[i] });
-                                }
-                                setFilterList(ing);
-                              })
-                            }
-                          }}
-                        />
+                          handleChange(idx, "ing", item);
+                        }
+                      }}
+                      />
                       </View>
 
                       <View style={{ marginVertical: 20 }}>
