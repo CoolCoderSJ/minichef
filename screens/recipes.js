@@ -700,7 +700,7 @@ export default function Recipes() {
                       onChangeText={(value) => {
                         recipes[recipeId]['serving'] = value;
                       }}
-                      defaultValue={recipes[recipeId]['serving']}
+                      defaultValue={String(recipes[recipeId]['serving'])}
                       placeholder="Servings"
                       keyboardType='numeric'
                     />
@@ -752,7 +752,7 @@ export default function Recipes() {
                           onChangeText={e => {
                             handleChange(idx, "serving_amt", e)
                           }}
-                          defaultValue={field.serving_amt}
+                          defaultValue={String(field.serving_amt)}
                           keyboardType='numeric'
                         />
                       </View>
