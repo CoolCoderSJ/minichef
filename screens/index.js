@@ -71,17 +71,6 @@ export default App = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Grocery Lists")}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Grocery Lists"}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
-          </TouchableOpacity>
-
           <TouchableOpacity onPress={() => navigation.navigate("Unit Conversion")}>
             <View style={styles.listItem}>
               <Text fontWeight="medium">{"Unit Conversion"}</Text>
