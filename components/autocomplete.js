@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, TextInput, FlatList, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const Autocomplete = ({ data, placeholder, onSelect, value }) => {
+const Autocomplete = ({ data, placeholder, onSelect, defaultValue, onChangeText }) => {
+    console.log(defaultValue)
+
   const [query, setQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
 
@@ -12,6 +14,8 @@ const Autocomplete = ({ data, placeholder, onSelect, value }) => {
     } else {
       setFilteredData([]);
     }
+
+    onChangeText(text);
   };
 
   const handleSelectItem = (item) => {
@@ -24,8 +28,8 @@ const Autocomplete = ({ data, placeholder, onSelect, value }) => {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        value={query}
-        defaultValue={value}
+        value={defaultValue}
+        defaultValue={defaultValue}
         onChangeText={handleInputChange}
         placeholder={placeholder}
         placeholderTextColor={"#60647e"}

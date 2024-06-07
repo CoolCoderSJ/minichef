@@ -52,6 +52,7 @@ export default function Recipes() {
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [mealsList, setMealsList] = React.useState([]);
   const [fields, setFields] = React.useState([{}]);
+  const [steps, setSteps] = React.useState([{}]);
   const [filterList, setFilterList] = React.useState([{}]);
 
   const [servingSizes, setServingSizes] = React.useState({});
@@ -63,12 +64,14 @@ export default function Recipes() {
     if (recipeId > recipes.length - 1) {
       recipes.push({
         name: "",
-        ing: []
+        ing: [],
+        steps: []
       })
     }
 
     if (recipes[recipeId]) {
       setFields(recipes[recipeId]['ing']);
+      setSteps(recipes[recipeId]['steps']);
     }
 
     setShowMealEditor(true)
@@ -110,7 +113,7 @@ export default function Recipes() {
     recipes[recipeId]['ing'] = values;
   }
 
-  function handleAdd() {
+  function handleAddIng() {
     const values = [...fields];
     values.push({ ing: null });
     setFields(values);
@@ -118,11 +121,39 @@ export default function Recipes() {
     filterAllowed.push(values.length - 1);
   }
 
-  function handleRemove(i) {
+  function handleRemoveIng(i) {
     const values = [...fields];
     values.splice(i, 1);
     setFields(values);
     recipes[recipeId]['ing'] = values;
+  }
+
+  function handleChangeStep(i, value) {
+
+    if (value == null || value == undefined) {
+      return
+    }
+
+    const values = [...steps];
+    values[i] = value;
+    setSteps(values);
+
+    recipes[recipeId]['steps'] = values;
+  }
+
+  function handleAddStep() {
+    const values = [...steps];
+    values.push(null);
+    setSteps(values);
+    recipes[recipeId]['steps'] = values;
+    filterAllowed.push(values.length - 1);
+  }
+
+  function handleRemoveStep(i) {
+    const values = [...steps];
+    values.splice(i, 1);
+    setSteps(values);
+    recipes[recipeId]['steps'] = values;
   }
 
   React.useEffect(() => {
@@ -338,7 +369,7 @@ export default function Recipes() {
                       <Autocomplete 
                       data={filterList} 
                       placeholder="Start typing to search ingredients..." 
-                      value={field.ing}
+                      defaultValue={field.ing}
                       onSelect={(item) => {
                         if (item) {
 
@@ -361,6 +392,10 @@ export default function Recipes() {
                           handleChange(idx, "ing", item);
                         }
                       }}
+
+                      onChangeText={e => {
+                        handleChange(idx, "ing", e)
+                      }}
                       />
                       </View>
 
@@ -371,7 +406,6 @@ export default function Recipes() {
                             handleChange(idx, "serving", e)
                           }}
                           defaultValue={field.serving}
-                          keyboardType="numeric"
                         />
                       </View>
 
@@ -384,7 +418,7 @@ export default function Recipes() {
                           text="Remove"
                           status="danger"
                           type="TouchableOpacity"
-                          onPress={() => { handleRemove(idx) }}
+                          onPress={() => { handleRemoveIng(idx) }}
                         />
                       </View>
                     </SectionContent>
@@ -400,8 +434,52 @@ export default function Recipes() {
                 text="Add New Ingredient"
                 status="primary"
                 type="TouchableOpacity"
-                onPress={handleAdd}
+                onPress={handleAddIng}
               />
+
+
+              {steps.map((step, idx) => {
+                return (
+                  <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
+                    <SectionContent>
+                      <View style={{ marginVertical: 20 }}>
+                        <TextInput
+                          placeholder="Enter a step.."
+                          onChangeText={e => {
+                            handleChangeStep(idx, e)
+                          }}
+                          defaultValue={step}
+                        />
+                      </View>
+
+                      <View style={{ marginBottom: 20 }}>
+                        <Button
+                          style={{ marginTop: 10 }}
+                          leftContent={
+                            <Ionicons name="trash-outline" size={20} color={themeColor.white} />
+                          }
+                          text="Remove"
+                          status="danger"
+                          type="TouchableOpacity"
+                          onPress={() => { handleRemoveStep(idx) }}
+                        />
+                      </View>
+                    </SectionContent>
+                  </Section>
+                );
+              })}
+
+              <Button
+                style={{ marginVertical: 10, marginHorizontal: 20 }}
+                leftContent={
+                  <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
+                }
+                text="Add New Step"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={handleAddStep}
+              />
+
             </View>
           }
 
