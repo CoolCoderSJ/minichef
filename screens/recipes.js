@@ -10,9 +10,10 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Query, Permission, Role } from "react-native-appwrite";
+import { Client, Databases, Query, Permission, Role, ID } from "react-native-appwrite";
 
 import Autocomplete from '../components/autocomplete';
+import Dialog from "react-native-dialog";
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -35,8 +36,21 @@ get("login").then(res => userId = res)
 .then(() => {
 db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
     if (result.total > 0) {
-        recipes = result.documents;
-        for (let i = 0; i < recipes.length; i++) {
+        for (let i = 0; i < result.documents.length; i++) {
+          let ing = []
+          for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+            ing.push({
+              ing: result.documents[i].ingredients[j],
+              serving: result.documents[i].servings_food[j]
+            });
+          }
+          recipes.push({
+            name: result.documents[i].name,
+            ing: ing,
+            steps: result.documents[i].steps,
+            serving: result.documents[i].servings,
+            recipeId: result.documents[i]['$id']
+          })
           filterAllowed.push(i);
         };
       }
@@ -59,13 +73,17 @@ export default function Recipes() {
 
   const [showMealEditor, setShowMealEditor] = React.useState(false);
 
+  const [deleteVisible, setDeleteVisible] = React.useState(false);
+  const [recipeIDToDel, setRIDTD] = React.useState(null)
+
 
   const fetchMeals = () => {
     if (recipeId > recipes.length - 1) {
       recipes.push({
         name: "",
         ing: [],
-        steps: []
+        steps: [],
+        recipeId: ID.unique()
       })
     }
 
@@ -118,7 +136,6 @@ export default function Recipes() {
     values.push({ ing: null });
     setFields(values);
     recipes[recipeId]['ing'] = values;
-    filterAllowed.push(values.length - 1);
   }
 
   function handleRemoveIng(i) {
@@ -146,7 +163,6 @@ export default function Recipes() {
     values.push(null);
     setSteps(values);
     recipes[recipeId]['steps'] = values;
-    filterAllowed.push(values.length - 1);
   }
 
   function handleRemoveStep(i) {
@@ -156,67 +172,152 @@ export default function Recipes() {
     recipes[recipeId]['steps'] = values;
   }
 
+  function handleCancel () {
+    setDeleteVisible(false);
+  }
+
+
+  const updateData = () => {
+    let ing = [];
+    let carbFood = [];
+
+    console.log("start")
+
+    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+      console.log("recipes", result)
+      if (result.total > 0) {
+        for (let i = 0; i < result.documents.length; i++) {
+          let ing = []
+          for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+            ing.push({
+              ing: result.documents[i].ingredients[j],
+              serving: result.documents[i].servings_food[j]
+            });
+          }
+          recipes.push({
+            name: result.documents[i].name,
+            ing: ing,
+            steps: result.documents[i].steps,
+            serving: result.documents[i].servings,
+            recipeId: result.documents[i]['$id']
+          })
+          filterAllowed.push(i);
+        };
+        }
+        else {
+          recipes = []
+        }
+  })
+
+  console.log("recipes", recipes)
+
+  db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
+    console.log("ingredients", result)
+      if (result.total > 0) {
+          mealDB = result.documents[0].items;
+        }
+  })
+  .then(() => {
+
+  for (let i = 0; i < mealDB.length; i++) {
+      ing.push({ id: String(i + 1), title: mealDB[i] });
+      carbFood.push(mealDB[i]);
+  }
+
+  console.log("ing", ing)
+  console.log("carbFood", carbFood)
+})
+.then (() => {
+  let filter = []
+  for (let i = 0; i < carbFood.length; i++) {
+    filter.push(carbFood[i]);
+  }
+  setFilterList(filter);
+  setMealsList(carbFood);
+
+  Toast.hide()
+})
+.then (() => {
+  console.log(filterList)
+  forceUpdate()
+  })
+  };
+
   React.useEffect(() => {
     Toast.show({
         type: 'info',
         text1: 'Loading...',
     })
 
-    const setDropDownList = () => {
-      let ing = [];
-      let carbFood = [];
-
-      console.log("start")
-
-      db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-        console.log("recipes", result)
-        if (result.total > 0) {
-            recipes = result.documents;
-            recipeDB = recipes;
-            for (let i = 0; i < recipes.length; i++) {
-              filterAllowed.push(i);
-            };
-          }
-    })
-
-    console.log("recipes", recipes)
-
-    db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
-      console.log("ingredients", result)
-        if (result.total > 0) {
-            mealDB = result.documents[0].items;
-          }
-    })
-    .then(() => {
-
-    for (let i = 0; i < mealDB.length; i++) {
-        ing.push({ id: String(i + 1), title: mealDB[i] });
-        carbFood.push(mealDB[i]);
-    }
-
-    console.log("ing", ing)
-    console.log("carbFood", carbFood)
-  })
-  .then (() => {
-    let filter = []
-    for (let i = 0; i < carbFood.length; i++) {
-      filter.push(carbFood[i]);
-    }
-    setFilterList(filter);
-    setMealsList(carbFood);
-  })
-  .then (() => {
-    console.log(filterList)
-    forceUpdate()
-    })
-    };
-
     const refreshData = navigation.addListener('focus', () => {
-      setDropDownList();
+      updateData();
       setShowMealEditor(false);
     })
     return refreshData;
   }, [navigation]);
+
+
+  async function save () {
+    Toast.show({
+      type: 'info',
+      text1: 'Saving...',
+    });
+
+    for (let i = 0; i < recipes.length; i++) {
+      if (recipes[i]['name'] == "") {
+        recipes.splice(i, 1);
+      }
+
+      let ingredients = []
+      let servings_food = []
+
+      for (let j = 0; j < recipes[i].ing.length; j++) {
+        ingredients.push(recipes[i].ing[j].ing)
+        servings_food.push(recipes[i].ing[j].serving)
+      }
+
+      try {
+        await db.createDocument("data", "recipes", recipes[i].recipeId, {
+          uid: userId,
+          ingredients: ingredients,
+          servings_food: servings_food,
+          steps: recipes[i].steps,
+          name: recipes[i].name,
+          servings: recipes[i].serving
+        }, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ]);
+
+        Toast.show({
+          type: 'success',
+          text1: 'Saved!',
+        });
+      }
+
+      catch {
+        await db.updateDocument("data", "recipes", recipes[i].recipeId, {
+          uid: userId,
+          ingredients: ingredients,
+          steps: recipes[i].steps,
+          name: recipes[i].name,
+          servings: recipes[i].serving
+        }, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ]);
+
+        Toast.show({
+          type: 'success',
+          text1: 'Saved!',
+        });
+      }
+    }
+  }
 
 
   return (
@@ -274,6 +375,30 @@ export default function Recipes() {
                 />
               </View>
 
+              <Dialog.Container visible={deleteVisible}>
+                <Dialog.Title>Delete Recipe</Dialog.Title>
+                <Dialog.Description>
+                  Are you sure you wnat to delete this recipe? You cannot undo this action.
+                </Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleCancel} />
+                <Dialog.Button label="Delete" onPress={() => {
+                  setDeleteVisible(false)
+                  Toast.show({
+                    type: "info",
+                    text1: "Deleting..."
+                  })
+                   db.deleteDocument("data", "recipes", recipes[recipeIDToDel].recipeId).then(() => {
+                    recipes.splice(recipeIDToDel, 1)
+                   forceUpdate()
+                   updateData()
+                   Toast.show({
+                    type: "success",
+                    text1: "Deleted!"
+                   })
+                   })
+                }} />
+              </Dialog.Container>
+
               {recipes.map((recipe, idx) => {
                 return (
                   <View>
@@ -297,7 +422,7 @@ export default function Recipes() {
                           text="Remove this recipe"
                           status="danger"
                           type="TouchableOpacity"
-                          onPress={() => { recipes.splice(idx, 1); forceUpdate() }}
+                          onPress={() => { setRIDTD(idx); setDeleteVisible(true) }}
                         />
                       </View>
                     }
@@ -327,14 +452,27 @@ export default function Recipes() {
 
               <View style={{ paddingBottom: 20 }}>
                 <Button style={{ marginHorizontal: 20, marginVertical: 10 }} status="primary" text="All Recipes" onPress={() => {
+                  updateData()
                   for (let i = 0; i < recipes.length; i++) {
                     if (recipes[i]['name'] == "") {
+                      console.log(i, recipes[i])
                       recipes.splice(i, 1);
                     }
                   }
 
                   setShowMealEditor(false)
                 }} />
+
+                  <Button
+                    style={{ marginVertical: 10, marginHorizontal: 20 }}
+                    leftContent={
+                      <Ionicons name="save-outline" size={20} color={themeColor.white} />
+                    }
+                    text="Save"
+                    color="#0b4276"
+                    type="TouchableOpacity"
+                    onPress={save}
+                  />
               </View>
 
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
@@ -485,6 +623,7 @@ export default function Recipes() {
 
         </ScrollView>
       </Layout>
+      <Toast />
     </KeyboardAvoidingView>
 
   );
