@@ -31,7 +31,7 @@ let currentRecipe = null;
 let recipes = [];
 let filterAllowed = []
 let mealDB = []
-let recipeDB = []
+let currentIndex = 0;
 
 let userId
 get("login").then(res => userId = res)
@@ -71,11 +71,11 @@ export default function Recipes() {
   const [fields, setFields] = React.useState([{}]);
   const [steps, setSteps] = React.useState([{}]);
   const [filterList, setFilterList] = React.useState([{}]);
-
-  const [servingSizes, setServingSizes] = React.useState({});
+  const [servings, setServings] = React.useState(null);
 
   const [showMealEditor, setShowMealEditor] = React.useState(false);
   const [showRecipePage, setshowRecipePage] = React.useState(false);
+  const [showWalkthrough, setShowWalkthrough] = React.useState(false);
 
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [recipeIDToDel, setRIDTD] = React.useState(null)
@@ -348,7 +348,7 @@ export default function Recipes() {
           keyboardShouldPersistTaps="handled"
           contentInsetAdjustmentBehavior="automatic"
           >
-          {!showMealEditor && !showRecipePage &&
+          {!showMealEditor && !showRecipePage && !showWalkthrough &&
             <View>
               <View
                 style={{
@@ -384,7 +384,7 @@ export default function Recipes() {
                   <View>
                     {filterAllowed.includes(idx) &&
                       <View>
-                        <TouchableOpacity onPress={() => { recipeId = idx; setRIDTD(idx); currentRecipe = _.cloneDeep(recipes[recipeId]); setshowRecipePage(true) }}>
+                        <TouchableOpacity onPress={() => { recipeId = idx; setRIDTD(idx); currentRecipe = _.cloneDeep(recipes[recipeId]); setServings(currentRecipe.serving); setshowRecipePage(true) }}>
                           <View style={styles.listItem}>
                             <Text fontWeight="medium">{recipe.name}</Text>
                             <Ionicons
@@ -418,7 +418,7 @@ export default function Recipes() {
 
 
 
-          {!showMealEditor && showRecipePage &&
+          {!showMealEditor && showRecipePage && !showWalkthrough &&
             <View>
               <Dialog.Container visible={deleteVisible}>
                 <Dialog.Title>Delete Recipe</Dialog.Title>
@@ -457,6 +457,9 @@ export default function Recipes() {
                     <Text style={{ fontSize: 22, textAlign: "center" }}>Servings: </Text>
                     <TextInput
                       onChangeText={(value) => {
+                        
+                        setServings(value)
+
                         for (let i=0; i < recipes[recipeId]['ing'].length; i++) {
                           currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(value)
                         }
@@ -518,6 +521,17 @@ export default function Recipes() {
               <Button
                 style={{ marginVertical: 5, marginHorizontal: 20 }}
                 leftContent={
+                  <Ionicons name="newspaper-outline" size={20} color={themeColor.white} />
+                }
+                text="Start Step-by-Step Instructions"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => { currentIndex = 0; setshowRecipePage(false); setShowMealEditor(false); setShowWalkthrough(true) }}
+              />
+
+              <Button
+                style={{ marginVertical: 5, marginHorizontal: 20 }}
+                leftContent={
                   <Ionicons name="pencil-outline" size={20} color={themeColor.white} />
                 }
                 text="Edit"
@@ -541,7 +555,107 @@ export default function Recipes() {
 
 
 
-          {showMealEditor && !showRecipePage &&
+          {!showMealEditor && !showRecipePage && showWalkthrough &&
+            <View>
+              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <SectionContent>
+                  <View style={{ marginBottom: 20 }}>
+                    <Text fontWeight="bold" style={{ fontSize: 35, marginVertical: 15, marginBottom: 20, textAlign: "center" }}>{recipes[recipeId]['name']}</Text>
+                    <View style={{
+                      display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 20,
+                      width: 150, gap: 8, marginHorizontal: "auto"
+                    }}>
+                    <Text style={{ fontSize: 22, textAlign: "center" }}>Servings: {servings}</Text>
+                    </View>
+                  </View>
+                </SectionContent>
+              </Section>
+                    
+              {currentIndex == 0 &&
+              <>
+                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <SectionContent>
+                  <View style={{ marginBottom: 20 }}>
+                    <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold", textAlign: "center" }}>Prepare Ingredients</Text>
+                    {currentRecipe['ing'].map((ing, idx) => {
+                      return (
+                        <View style={{ marginHorizontal: 20, marginTop: 10 }}>
+                          <Text style={{ fontSize: 17 }}>{ing.serving_amt} {ing.serving_unit} {ing.ing}</Text>
+                        </View>
+                      )
+                    })}
+                  </View>
+                </SectionContent>
+              </Section>
+
+              <Button
+                  style={{ marginVertical: 5, marginHorizontal: 20 }}
+                  leftContent={
+                    <Ionicons name="chevron-back" size={20} color={themeColor.white} />
+                  }
+                  text="Back"
+                  color="black100"
+                  type="TouchableOpacity"
+                  onPress={() => { setShowWalkthrough(false); setshowRecipePage(true); setShowMealEditor(false) }}
+                />
+
+                <Button
+                  style={{ marginVertical: 5, marginHorizontal: 20 }}
+                  rightContent={
+                    <Ionicons name="chevron-forward" size={20} color={themeColor.white} />
+                  }
+                  text="Next"
+                  status="primary"
+                  type="TouchableOpacity"
+                  onPress={() => { currentIndex += 1; forceUpdate() }}
+                />
+              </>
+              }
+
+              {currentIndex > 0 &&
+              <>
+                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <SectionContent>
+                  <View style={{ marginBottom: 0 }}>
+                    <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold", textAlign: "center" }}>Step {currentIndex}</Text>
+                      <View style={{ marginHorizontal: 20, marginTop: 10 }}>
+                        <Text style={{ fontSize: 20, marginBottom: 10 }}>{currentRecipe.steps[currentIndex - 1]}</Text>
+                      </View>
+                  </View>
+                </SectionContent>
+                </Section>
+
+                <Button
+                  style={{ marginTop: 20, marginVertical: 5, marginHorizontal: 20 }}
+                  leftContent={
+                    <Ionicons name="chevron-back" size={20} color={themeColor.white} />
+                  }
+                  text="Back"
+                  color="black100"
+                  type="TouchableOpacity"
+                  onPress={() => { currentIndex -= 1; forceUpdate() }}
+                />
+
+                {currentIndex < currentRecipe.steps.length &&
+                <Button
+                  style={{ marginVertical: 5, marginHorizontal: 20 }}
+                  rightContent={
+                    <Ionicons name="chevron-forward" size={20} color={themeColor.white} />
+                  }
+                  text="Next"
+                  status="primary"
+                  type="TouchableOpacity"
+                  onPress={() => { currentIndex += 1; forceUpdate() }}
+                />
+                }
+              </>
+              }
+            </View>
+          }
+
+
+
+          {showMealEditor && !showRecipePage && !showWalkthrough &&
             <View>
 
               <View style={{ paddingBottom: 20 }}>
