@@ -11,6 +11,7 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Permission, Role, ID } from "react-native-appwrite";
+import _ from 'lodash';
 
 import Autocomplete from '../components/autocomplete';
 import Dialog from "react-native-dialog";
@@ -26,6 +27,7 @@ const get = async (key) => { try { const value = await AsyncStorage.getItem(key)
 
 
 let recipeId = NaN;
+let currentRecipe = null;
 let recipes = [];
 let filterAllowed = []
 let mealDB = []
@@ -41,7 +43,8 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
           for (let j = 0; j < result.documents[i].ingredients.length; j++) {
             ing.push({
               ing: result.documents[i].ingredients[j],
-              serving: result.documents[i].servings_food[j]
+              serving_amt: result.documents[i].serving_amt[j],
+              serving_unit: result.documents[i].serving_units[j]
             });
           }
           recipes.push({
@@ -72,6 +75,7 @@ export default function Recipes() {
   const [servingSizes, setServingSizes] = React.useState({});
 
   const [showMealEditor, setShowMealEditor] = React.useState(false);
+  const [showRecipePage, setshowRecipePage] = React.useState(false);
 
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [recipeIDToDel, setRIDTD] = React.useState(null)
@@ -185,28 +189,25 @@ export default function Recipes() {
 
     db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
       console.log("recipes", result)
-      if (result.total > 0) {
-        for (let i = 0; i < result.documents.length; i++) {
-          let ing = []
-          for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-            ing.push({
-              ing: result.documents[i].ingredients[j],
-              serving: result.documents[i].servings_food[j]
-            });
-          }
-          recipes.push({
-            name: result.documents[i].name,
-            ing: ing,
-            steps: result.documents[i].steps,
-            serving: result.documents[i].servings,
-            recipeId: result.documents[i]['$id']
-          })
-          filterAllowed.push(i);
-        };
+      recipes = []
+      for (let i = 0; i < result.documents.length; i++) {
+        let ing = []
+        for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+          ing.push({
+            ing: result.documents[i].ingredients[j],
+            serving_amt: result.documents[i].serving_amt[j],
+            serving_unit: result.documents[i].serving_units[j]
+          });
         }
-        else {
-          recipes = []
-        }
+        recipes.push({
+          name: result.documents[i].name,
+          ing: ing,
+          steps: result.documents[i].steps,
+          serving: result.documents[i].servings,
+          recipeId: result.documents[i]['$id']
+        })
+        filterAllowed.push(i);
+      };
   })
 
   console.log("recipes", recipes)
@@ -269,21 +270,24 @@ export default function Recipes() {
       }
 
       let ingredients = []
-      let servings_food = []
+      let serving_amt = []
+      let serving_units = []
 
       for (let j = 0; j < recipes[i].ing.length; j++) {
         ingredients.push(recipes[i].ing[j].ing)
-        servings_food.push(recipes[i].ing[j].serving)
+        serving_amt.push(Number(recipes[i].ing[j].serving_amt))
+        serving_units.push(recipes[i].ing[j].serving_unit)
       }
 
       try {
         await db.createDocument("data", "recipes", recipes[i].recipeId, {
           uid: userId,
           ingredients: ingredients,
-          servings_food: servings_food,
+          serving_units: serving_units,
+          serving_amt: serving_amt,
           steps: recipes[i].steps,
           name: recipes[i].name,
-          servings: recipes[i].serving
+          servings: Number(recipes[i].serving)
         }, [
           Permission.read(Role.user(userId)),
           Permission.write(Role.user(userId)),
@@ -344,7 +348,7 @@ export default function Recipes() {
           keyboardShouldPersistTaps="handled"
           contentInsetAdjustmentBehavior="automatic"
           >
-          {!showMealEditor &&
+          {!showMealEditor && !showRecipePage &&
             <View>
               <View
                 style={{
@@ -375,36 +379,12 @@ export default function Recipes() {
                 />
               </View>
 
-              <Dialog.Container visible={deleteVisible}>
-                <Dialog.Title>Delete Recipe</Dialog.Title>
-                <Dialog.Description>
-                  Are you sure you wnat to delete this recipe? You cannot undo this action.
-                </Dialog.Description>
-                <Dialog.Button label="Cancel" onPress={handleCancel} />
-                <Dialog.Button label="Delete" onPress={() => {
-                  setDeleteVisible(false)
-                  Toast.show({
-                    type: "info",
-                    text1: "Deleting..."
-                  })
-                   db.deleteDocument("data", "recipes", recipes[recipeIDToDel].recipeId).then(() => {
-                    recipes.splice(recipeIDToDel, 1)
-                   forceUpdate()
-                   updateData()
-                   Toast.show({
-                    type: "success",
-                    text1: "Deleted!"
-                   })
-                   })
-                }} />
-              </Dialog.Container>
-
               {recipes.map((recipe, idx) => {
                 return (
                   <View>
                     {filterAllowed.includes(idx) &&
                       <View>
-                        <TouchableOpacity onPress={() => { recipeId = idx; fetchMeals() }}>
+                        <TouchableOpacity onPress={() => { recipeId = idx; setRIDTD(idx); currentRecipe = _.cloneDeep(recipes[recipeId]); setshowRecipePage(true) }}>
                           <View style={styles.listItem}>
                             <Text fontWeight="medium">{recipe.name}</Text>
                             <Ionicons
@@ -414,16 +394,6 @@ export default function Recipes() {
                             />
                           </View>
                         </TouchableOpacity>
-                        <Button
-                          style={{ marginTop: 10, marginHorizontal: 20, marginBottom: 20 }}
-                          leftContent={
-                            <Ionicons name="trash-outline" size={20} color={themeColor.white} />
-                          }
-                          text="Remove this recipe"
-                          status="danger"
-                          type="TouchableOpacity"
-                          onPress={() => { setRIDTD(idx); setDeleteVisible(true) }}
-                        />
                       </View>
                     }
                   </View>
@@ -447,7 +417,131 @@ export default function Recipes() {
           }
 
 
-          {showMealEditor &&
+
+          {!showMealEditor && showRecipePage &&
+            <View>
+              <Dialog.Container visible={deleteVisible}>
+                <Dialog.Title>Delete Recipe</Dialog.Title>
+                <Dialog.Description>
+                  Are you sure you wnat to delete this recipe? You cannot undo this action.
+                </Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleCancel} />
+                <Dialog.Button label="Delete" onPress={() => {
+                  setDeleteVisible(false)
+                  Toast.show({
+                    type: "info",
+                    text1: "Deleting..."
+                  })
+                   db.deleteDocument("data", "recipes", recipes[recipeIDToDel].recipeId).then(() => {
+                    recipes.splice(recipeIDToDel, 1)
+                   setshowRecipePage(false)
+                   setShowMealEditor(false)
+                   forceUpdate()
+                   updateData()
+                   Toast.show({
+                    type: "success",
+                    text1: "Deleted!"
+                   })
+                   })
+                }} />
+              </Dialog.Container>
+
+              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <SectionContent>
+                  <View style={{ marginBottom: 20 }}>
+                    <Text fontWeight="bold" style={{ fontSize: 35, marginVertical: 15, marginBottom: 20, textAlign: "center" }}>{recipes[recipeId]['name']}</Text>
+                    <View style={{
+                      display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 20,
+                      width: 150, gap: 8, marginHorizontal: "auto"
+                    }}>
+                    <Text style={{ fontSize: 22, textAlign: "center" }}>Servings: </Text>
+                    <TextInput
+                      onChangeText={(value) => {
+                        for (let i=0; i < recipes[recipeId]['ing'].length; i++) {
+                          currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(value)
+                        }
+                        forceUpdate()
+                      }}
+                      defaultValue={String(recipes[recipeId]['serving'])}
+                      placeholder="Servings"
+                      keyboardType='numeric'
+                      style={{
+                        width: 100
+                      }}
+                    />
+                    </View>
+                  </View>
+                </SectionContent>
+              </Section>
+
+              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <SectionContent>
+                  <View style={{ marginBottom: 20 }}>
+                    <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold" }}>Ingredients</Text>
+                    {currentRecipe['ing'].map((ing, idx) => {
+                      return (
+                        <View style={{ marginHorizontal: 20, marginTop: 10 }}>
+                          <Text style={{ fontSize: 17 }}>{ing.serving_amt} {ing.serving_unit} {ing.ing}</Text>
+                        </View>
+                      )
+                    })}
+                  </View>
+                </SectionContent>
+              </Section>
+
+              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20, marginBottom: 20 }}>
+                <SectionContent>
+                    <View style={{ marginBottom: 20 }}>
+                      <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold" }}>Steps</Text>
+                      {recipes[recipeId]['steps'].map((step, idx) => {
+                        return (
+                          <View style={{ marginHorizontal: 20, marginTop: 10 }}>
+                            <Text style={{ fontSize: 17 }}>{idx + 1}. {step}</Text>
+                          </View>
+                        )
+                      })}
+                    </View>
+                </SectionContent>
+              </Section>
+
+              <Button
+                style={{ marginVertical: 5, marginHorizontal: 20 }}
+                leftContent={
+                  <Ionicons name="chevron-back" size={20} color={themeColor.white} />
+                }
+                text="Back"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => { setshowRecipePage(false) }}
+              />
+
+              <Button
+                style={{ marginVertical: 5, marginHorizontal: 20 }}
+                leftContent={
+                  <Ionicons name="pencil-outline" size={20} color={themeColor.white} />
+                }
+                text="Edit"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => { setshowRecipePage(false); fetchMeals(); setShowMealEditor(true) }}
+              />
+
+              <Button
+                style={{ marginTop: 5, marginHorizontal: 20, marginBottom: 20 }}
+                leftContent={
+                  <Ionicons name="trash-outline" size={20} color={themeColor.white} />
+                }
+                text="Delete Recipe"
+                status="danger"
+                type="TouchableOpacity"
+                onPress={() => { setDeleteVisible(true) }}
+              />
+            </View>
+          }
+
+
+
+          {showMealEditor && !showRecipePage &&
             <View>
 
               <View style={{ paddingBottom: 20 }}>
@@ -494,6 +588,7 @@ export default function Recipes() {
                       }}
                       defaultValue={recipes[recipeId]['serving']}
                       placeholder="Servings"
+                      keyboardType='numeric'
                     />
                   </View>
                 </SectionContent>
@@ -518,7 +613,7 @@ export default function Recipes() {
                               mealObj = mealsList[i]
                               let fieldset = fields
 
-                              fieldset[idx]['serving'] = "1"
+                              fieldset[idx]['serving_amt'] = "1"
                               setFields(fieldset)
                             }
                           }
@@ -539,11 +634,22 @@ export default function Recipes() {
 
                       <View style={{ marginVertical: 20 }}>
                         <TextInput
-                          placeholder="Serving Size"
+                          placeholder="Amount"
                           onChangeText={e => {
-                            handleChange(idx, "serving", e)
+                            handleChange(idx, "serving_amt", e)
                           }}
-                          defaultValue={field.serving}
+                          defaultValue={field.serving_amt}
+                          keyboardType='numeric'
+                        />
+                      </View>
+
+                      <View style={{ marginBottom: 20 }}>
+                        <TextInput
+                          placeholder="Unit (i.e. cups, tbsp, etc)"
+                          onChangeText={e => {
+                            handleChange(idx, "serving_unit", e)
+                          }}
+                          defaultValue={field.serving_unit}
                         />
                       </View>
 
