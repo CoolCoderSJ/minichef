@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions } from "react-native";
 import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
@@ -22,8 +22,6 @@ const db = new Databases(client);
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
 
-let userId
-get("login").then(res => userId = res)
 
 let recipeId = NaN;
 let recipes = [];
@@ -31,6 +29,9 @@ let filterAllowed = []
 let mealDB = []
 let recipeDB = []
 
+let userId
+get("login").then(res => userId = res)
+.then(() => {
 db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
     if (result.total > 0) {
         recipes = result.documents;
@@ -38,6 +39,7 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
           filterAllowed.push(i);
         };
       }
+})
 })
 
 
@@ -47,10 +49,9 @@ export default function Recipes() {
 
   // Initialize the state
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-
-  const [filterList, setFilterList] = React.useState([]);
   const [mealsList, setMealsList] = React.useState([]);
   const [fields, setFields] = React.useState([{}]);
+  const [filterList, setFilterList] = React.useState([{}]);
 
   const [servingSizes, setServingSizes] = React.useState({});
 
@@ -133,7 +134,10 @@ export default function Recipes() {
       let ing = [];
       let carbFood = [];
 
+      console.log("start")
+
       db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+        console.log("recipes", result)
         if (result.total > 0) {
             recipes = result.documents;
             recipeDB = recipes;
@@ -143,21 +147,36 @@ export default function Recipes() {
           }
     })
 
+    console.log("recipes", recipes)
+
     db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
+      console.log("ingredients", result)
         if (result.total > 0) {
             mealDB = result.documents[0].items;
           }
     })
+    .then(() => {
 
     for (let i = 0; i < mealDB.length; i++) {
-        ing.push({ id: i + 1, title: mealDB[i] });
+        ing.push({ id: String(i + 1), title: mealDB[i] });
         carbFood.push(mealDB[i]);
     }
 
-    setFilterList(ing);
+    console.log("ing", ing)
+    console.log("carbFood", carbFood)
+  })
+  .then (() => {
+    let filter = []
+    for (let i = 0; i < carbFood.length; i++) {
+      filter.push({ id: String(i + 1), title: carbFood[i] });
+    }
+    setFilterList(filter);
     setMealsList(carbFood);
+  })
+  .then (() => {
+    console.log(filterList)
     forceUpdate()
-
+    })
     };
 
     const refreshData = navigation.addListener('focus', () => {
@@ -186,7 +205,12 @@ export default function Recipes() {
           middleContent="Recipes"
         />
 
-        <ScrollView>
+        <ScrollView 
+          nestedScrollEnabled
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="automatic"
+          >
           {!showMealEditor &&
             <View>
               <View
@@ -281,7 +305,7 @@ export default function Recipes() {
                 }} />
               </View>
 
-              <Section style={{ paddingBottom: 20, marginHorizontal: 20, marginTop: 20 }}>
+              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                   <View style={{ marginBottom: 20 }}>
                     <TextInput
@@ -305,11 +329,12 @@ export default function Recipes() {
                 </SectionContent>
               </Section>
 
+              {console.log("filterList", filterList)}
               {fields.map((field, idx) => {
                 return (
                   <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
-                      <React.Fragment style={{ marginBottom: 20 }}>
+                      <View>
                         <AutocompleteDropdown
                           textInputProps={{
                             onChangeText: e => {
@@ -319,44 +344,54 @@ export default function Recipes() {
                               if (mealDB) {
                                 for (let i = 0; i < mealDB.length; i++) {
                                   if (mealDB[i].includes(e)) {
-                                    meals.push({ id: String(i + 2), title: mealDB[i] });
+                                    meals.push({ id: String(i + 1), title: mealDB[i] });
                                   }
                                 }
+
+                                console.log("meals", meals)
                               }
 
                               setFilterList(meals);
+                              console.log("changed", filterList)
                               forceUpdate()
                             },
                             value: field.ing,
                             placeholder: "Ingredient Name",
                             style: {
                               color: isDarkmode ? themeColor.white : themeColor.dark,
-                              backgroundColor: isDarkmode ? "#262834" : themeColor.white,
-                              borderColor: isDarkmode ? "#60647e" : "#d8d8d8",
+                              backgroundColor: "#262834",
+                              borderColor: "#60647e",
                               borderWidth: 1,
                               borderRadius: 8,
-                              flexDirection: "row",
                               paddingHorizontal: 20,
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              fontFamily: "Ubuntu_400Regular",
+                              fontFamily: "Ubuntu_400Regular"
                             }
                           }}
 
                           rightButtonsContainerStyle={{
-                            backgroundColor: isDarkmode ? "#262834" : themeColor.white,
-                            borderColor: isDarkmode ? "#60647e" : "#d8d8d8",
-                            borderWidth: 1,
-                            borderRadius: 8,
+                            backgroundColor: "#262834",
+                            borderColor: "#60647e",
+                            borderTopRightRadius: 8,
+                            borderBottomRightRadius: 8,
+                            borderTopWidth: 1,
+                            borderBottomWidth: 1,
+                            borderRightWidth: 1
                           }}
                           suggestionsListContainerStyle={{
-                            backgroundColor: isDarkmode ? "#262834" : themeColor.white,
+                            // backgroundColor: isDarkmode ? "#262834" : themeColor.white,
                             color: isDarkmode ? themeColor.white : themeColor.dark,
+                            elevation: 10,
+                            zIndex: 10,
                           }}
-                          renderItem={(item, text) => (
-                            <Text style={{ color: isDarkmode ? themeColor.white : themeColor.dark, padding: 15 }}>{item.title}</Text>
-                          )}
+                          containerStyle={{ 
+                            flexGrow: 1, flexShrink: 1, width: "100%", backgroundColor: "#262834"
+                           }}
+                          suggestionsListMaxHeight={Dimensions.get('window').height * 0.15}
+                          renderItem={(item, text) => 
+                            <Text style={{ color: themeColor.white, padding: 15, zIndex: 15, elevation: 15 }} key={ item.id }>{item.title}</Text>
+                          }
                           showClear={true}
+                          useFilter={false}
                           clearOnFocus={false}
                           closeOnBlur={false}
                           closeOnSubmit={true}
@@ -388,14 +423,14 @@ export default function Recipes() {
 
                               db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
                                 for (let i = 0; i < result.documents.length; i++) {
-                                  ing.push({ id: String(i + 2), title: result.documents[i] });
+                                  ing.push({ id: String(i + 1), title: result.documents[i] });
                                 }
                                 setFilterList(ing);
                               })
                             }
                           }}
                         />
-                      </React.Fragment>
+                      </View>
 
                       <View style={{ marginVertical: 20 }}>
                         <TextInput
