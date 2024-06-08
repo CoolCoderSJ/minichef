@@ -11,6 +11,7 @@ import Login from "../../screens/login";
 import Recipes from '../../screens/recipes';
 import Ingredients from '../../screens/ingredients';
 import UnitConversion from "../../screens/unitconversion";
+import Settings from "../../screens/settings";
 
 // Create the navigation stack
 const MainStack = createStackNavigator();
@@ -30,6 +31,7 @@ const Main = () => {
         <MainStack.Screen name="Recipes" component={Recipes} />
         <MainStack.Screen name="Ingredients" component={Ingredients} />
         <MainStack.Screen name="Unit Conversion" component={UnitConversion} />
+        <MainStack.Screen name="Settings" component={Settings} />
 
       </MainStack.Navigator>
     </NavigationContainer>

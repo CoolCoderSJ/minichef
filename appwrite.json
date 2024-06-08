@@ -11,10 +11,26 @@
             "ignore": [
                 "__pypackages__"
             ],
-            "execute": ["users"],
+            "execute": [
+                "users"
+            ],
             "events": [],
             "schedule": "",
             "timeout": 120
+        },
+        {
+            "$id": "deleteUser",
+            "name": "Delete User",
+            "runtime": "python-3.9",
+            "path": "functions/Delete User",
+            "entrypoint": "src/index.py",
+            "ignore": [
+                "__pypackages__"
+            ],
+            "execute": [],
+            "events": [],
+            "schedule": "",
+            "timeout": 15
         }
     ]
 }
