@@ -567,7 +567,7 @@ export default function Recipes() {
                     {currentRecipe['ing'].map((ing, idx) => {
                       return (
                         <View style={{ marginHorizontal: 20, marginTop: 18 }}>
-                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ fontWeight: "bold" }}>{ing.serving_amt} {ing.serving_unit}</Text>} {ing.ing}</Text>
+                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200 }}>{ing.serving_amt} {ing.serving_unit}</Text>} {ing.ing}</Text>
                         </View>
                       )
                     })}
@@ -663,7 +663,7 @@ export default function Recipes() {
                     {currentRecipe['ing'].map((ing, idx) => {
                       return (
                         <View style={{ marginHorizontal: 20, marginTop: 10 }}>
-                          <Text style={{ fontSize: 17 }}>{ing.serving_amt} {ing.serving_unit} {ing.ing}</Text>
+                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200 }}>{ing.serving_amt} {ing.serving_unit}</Text>} {ing.ing}</Text>
                         </View>
                       )
                     })}
