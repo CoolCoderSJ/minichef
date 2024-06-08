@@ -90,6 +90,7 @@ export default function Recipes() {
     if (recipeId > recipes.length - 1) {
       recipes.push({
         name: "",
+        serving: "",
         ing: [],
         steps: [],
         recipeId: ID.unique()
@@ -565,8 +566,8 @@ export default function Recipes() {
                     <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold" }}>Ingredients</Text>
                     {currentRecipe['ing'].map((ing, idx) => {
                       return (
-                        <View style={{ marginHorizontal: 20, marginTop: 10 }}>
-                          <Text style={{ fontSize: 17 }}>{ing.serving_amt} {ing.serving_unit} {ing.ing}</Text>
+                        <View style={{ marginHorizontal: 20, marginTop: 18 }}>
+                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ fontWeight: "bold" }}>{ing.serving_amt} {ing.serving_unit}</Text>} {ing.ing}</Text>
                         </View>
                       )
                     })}
@@ -580,7 +581,7 @@ export default function Recipes() {
                       <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold" }}>Steps</Text>
                       {recipes[recipeId]['steps'].map((step, idx) => {
                         return (
-                          <View style={{ marginHorizontal: 20, marginTop: 10 }}>
+                          <View style={{ marginHorizontal: 20, marginTop: 15 }}>
                             <Text style={{ fontSize: 17 }}>{idx + 1}. {step}</Text>
                           </View>
                         )
@@ -736,7 +737,6 @@ export default function Recipes() {
           }
 
 
-
           {showMealEditor && !showRecipePage && !showWalkthrough &&
             <View>
 
@@ -832,7 +832,7 @@ export default function Recipes() {
                         <TextInput
                           placeholder="Amount"
                           onChangeText={e => {
-                            handleChange(idx, "serving_amt", e)
+                            handleChange(idx, "serving_amt", Number(e))
                           }}
                           defaultValue={String(field.serving_amt)}
                           keyboardType='numeric'
