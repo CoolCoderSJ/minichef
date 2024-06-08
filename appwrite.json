@@ -1,0 +1,20 @@
+{
+    "projectId": "minichef",
+    "projectName": "Mini Chef",
+    "functions": [
+        {
+            "$id": "import",
+            "name": "Import Using AI",
+            "runtime": "python-3.9",
+            "path": "functions/Import Using AI",
+            "entrypoint": "src/index.py",
+            "ignore": [
+                "__pypackages__"
+            ],
+            "execute": ["users"],
+            "events": [],
+            "schedule": "",
+            "timeout": 120
+        }
+    ]
+}
