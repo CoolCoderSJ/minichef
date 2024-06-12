@@ -22,7 +22,7 @@ jobs:
           apple-id: ${{ secrets.APPLE_ID }}
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Install deps
-        run: yarn install && yarn add eas-cli
+        run: yarn install && yarn global add eas-cli
       - name: Load credentials
         run: echo ${{ secrets.CREDENTIALS_JSON_BASE64 }} | base64 -d > credentials.json
       - name: Build iOS app
