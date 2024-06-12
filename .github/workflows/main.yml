@@ -20,18 +20,18 @@ jobs:
       - uses: sinoru/actions-setup-xcode@v1.1.2
         with:
           xcode-version: '15.4'
-          apple-id: ${{ secrets.APPLE_ID }}
-          apple-id-password: ${{ secrets.APPLE_PASSWORD }}
+          apple-id: ${{ vars.APPLE_ID }}
+          apple-id-password: ${{ vars.APPLE_PASSWORD }}
       - name: Install deps
         run: yarn install && yarn global add eas-cli
       - name: Load credentials
-        run: echo ${{ secrets.CREDENTIALS_JSON_BASE64 }} | base64 -d > credentials.json
+        run: echo ${{ vars.CREDENTIALS_JSON_BASE64 }} | base64 -d > credentials.json
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          token: ${{ vars.EXPO_TOKEN }}
       - name: Build iOS app
         run: eas build -p ios --local --non-interactive
         env:
-            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+            EXPO_TOKEN: ${{ vars.EXPO_TOKEN }}
