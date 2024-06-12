@@ -25,7 +25,12 @@ jobs:
         run: yarn install && yarn global add eas-cli
       - name: Load credentials
         run: echo ${{ secrets.CREDENTIALS_JSON_BASE64 }} | base64 -d > credentials.json
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
       - name: Build iOS app
-        run: eas build -p ios --local
+        run: eas build -p ios --local --non-interactive
         env:
             EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
