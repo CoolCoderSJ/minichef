@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-for-IOS:
-    environment: production
+    environment: workflow-build
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
