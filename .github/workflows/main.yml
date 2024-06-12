@@ -32,6 +32,10 @@ jobs:
           eas-version: latest
           token: ${{ vars.EXPO_TOKEN }}
       - name: Build iOS app
-        run: eas build -p ios --local --non-interactive
+        run: eas build -p ios --local --non-interactive --output build.ipa
         env:
             EXPO_TOKEN: ${{ vars.EXPO_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build.ipa
