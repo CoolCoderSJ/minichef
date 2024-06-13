@@ -2,7 +2,7 @@
   "expo": {
     "name": "minichef",
     "slug": "minichef",
-    "version": "0.1.1",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +13,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "dev.shuchir.minichef"
+      "bundleIdentifier": "dev.shuchir.minichef",
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
