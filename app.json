@@ -14,7 +14,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "dev.shuchir.minichef",
-      "buildNumber": "2"
+      "buildNumber": "2",
+      "entitlements": {
+        "aps-environment": "development"
+      },
     },
     "android": {
       "adaptiveIcon": {
