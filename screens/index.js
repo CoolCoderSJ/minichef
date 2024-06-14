@@ -11,6 +11,8 @@ import {
   Layout, Text, Button,
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 
 
@@ -21,7 +23,7 @@ const delkey = async (key, value) => { try { await AsyncStorage.removeItem(key) 
 const getAll = async () => { try { const keys = await AsyncStorage.getAllKeys(); return keys } catch (error) { console.error(error) } }
 
 
-export default App = () => {
+function Index () {
 
   const navigation = useNavigation();
   // Set the state of the app
@@ -110,5 +112,58 @@ export default App = () => {
 
         </ScrollView>
       </Layout>
+  );
+}
+
+import Recipes from './recipes';
+import Ingredients from './ingredients';
+import UnitConversion from "./unitconversion";
+import Settings from "./settings";
+
+const Tab = createBottomTabNavigator();
+
+export default App = () => {
+  return (
+      <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Recipes') iconName = focused ? 'book' : 'book-outline';
+          else if (route.name === 'Ingredients') iconName = focused ? 'nutrition' : 'nutrition-outline';
+          else if (route.name === 'Unit Conversion') iconName = focused ? 'calculator' : 'calculator-outline';
+          else if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "bold",
+          marginBottom: 7
+        },
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          padding: 5,
+          height: 60,
+          backgroundColor: "#1a1820",
+          border: "none",
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
+        },
+        tabBarActiveTintColor: themeColor.primary300,
+        tabBarInactiveTintColor: themeColor.gray300,
+      })}
+      >
+        
+        <Tab.Screen name="Home" component={Index} />
+        <Tab.Screen name="Recipes" component={Recipes} />
+        <Tab.Screen name="Ingredients" component={Ingredients} />
+        <Tab.Screen name="Unit Conversion" component={UnitConversion} />
+        <Tab.Screen name="Settings" component={Settings} />
+
+      </Tab.Navigator>
   );
 }

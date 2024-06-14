@@ -8,17 +8,16 @@ import React from "react";
 import App from "../../screens/index";
 import Login from "../../screens/login";
 
-import Recipes from '../../screens/recipes';
-import Ingredients from '../../screens/ingredients';
-import UnitConversion from "../../screens/unitconversion";
-import Settings from "../../screens/settings";
-
 // Create the navigation stack
 const MainStack = createStackNavigator();
 
 const Main = () => {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={{
+      colors: {
+        background: 'transparent',
+      }
+    }}>
       <MainStack.Navigator
         initialRouteName="Login"
         screenOptions={{
@@ -27,11 +26,6 @@ const Main = () => {
       >
         <MainStack.Screen name="login" component={Login} />
         <MainStack.Screen name="app" component={App} />
-
-        <MainStack.Screen name="Recipes" component={Recipes} />
-        <MainStack.Screen name="Ingredients" component={Ingredients} />
-        <MainStack.Screen name="Unit Conversion" component={UnitConversion} />
-        <MainStack.Screen name="Settings" component={Settings} />
 
       </MainStack.Navigator>
     </NavigationContainer>
