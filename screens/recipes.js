@@ -11,7 +11,7 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
-import _ from 'lodash';
+import _, { set } from 'lodash';
 
 import Autocomplete from '../components/autocomplete';
 import Dialog from "react-native-dialog";
@@ -337,6 +337,7 @@ export default function Recipes() {
     }
     if (showMealEditor) {
       setShowMealEditor(false)
+      setshowRecipePage(true)
       return true;
     }
     if (showRecipePage) {
@@ -345,6 +346,7 @@ export default function Recipes() {
     }
     if (showWalkthrough) {
       setShowWalkthrough(false)
+      setshowRecipePage(true)
       return true;
     }
     return false;
