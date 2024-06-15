@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, BackHandler } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Button, Layout, Section, SectionContent, Text,
@@ -328,6 +328,27 @@ export default function Recipes() {
       }
     }
   }
+
+
+  BackHandler.addEventListener('hardwareBackPress', function () {
+    if (!showMealEditor && !showRecipePage && !showWalkthrough) {
+      navigation.goBack();
+      return true;
+    }
+    if (showMealEditor) {
+      setShowMealEditor(false)
+      return true;
+    }
+    if (showRecipePage) {
+      setshowRecipePage(false)
+      return true;
+    }
+    if (showWalkthrough) {
+      setShowWalkthrough(false)
+      return true;
+    }
+    return false;
+  });
 
 
   return (
