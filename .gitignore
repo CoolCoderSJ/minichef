@@ -16,6 +16,7 @@ credentials.json
 *.p12
 *.key
 *.mobileprovision
+android/
 
 # Metro
 .metro-health-check*

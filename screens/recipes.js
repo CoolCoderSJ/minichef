@@ -15,6 +15,9 @@ import _, { set } from 'lodash';
 
 import Autocomplete from '../components/autocomplete';
 import Dialog from "react-native-dialog";
+import { MenuView } from '@react-native-menu/menu';
+
+import { Fraction } from "fractional";
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -306,14 +309,16 @@ export default function Recipes() {
           text1: 'Saved!',
         });
       }
-
+ 
       catch {
         await db.updateDocument("data", "recipes", recipes[i].recipeId, {
           uid: userId,
           ingredients: ingredients,
+          serving_units: serving_units,
+          serving_amt: serving_amt,
           steps: recipes[i].steps,
           name: recipes[i].name,
-          servings: recipes[i].serving
+          servings: Number(recipes[i].serving)
         }, [
           Permission.read(Role.user(userId)),
           Permission.write(Role.user(userId)),
@@ -329,8 +334,7 @@ export default function Recipes() {
     }
   }
 
-
-  BackHandler.addEventListener('hardwareBackPress', function () {
+  function handleBack () {
     if (!showMealEditor && !showRecipePage && !showWalkthrough) {
       navigation.goBack();
       return true;
@@ -350,7 +354,9 @@ export default function Recipes() {
       return true;
     }
     return false;
-  });
+  }
+
+  BackHandler.addEventListener('hardwareBackPress', handleBack);
 
 
   return (
@@ -367,7 +373,7 @@ export default function Recipes() {
               color={isDarkmode ? themeColor.white : themeColor.black}
             />
           }
-          leftAction={() => navigation.goBack()}
+          leftAction={handleBack}
           middleContent="Recipes"
         />
 
@@ -443,7 +449,8 @@ export default function Recipes() {
                 }}
               />
 
-                <View style={{ marginHorizontal: 20, marginVertical: 10, marginTop: 25 }}>
+                <View style={{ flexDirection: "row", height: "fit-content", marginTop: 25, gap: 24 }}>
+                <View style={{ marginLeft: 20, marginVertical: 10, flex: 10, width: "100%" }}>
                   <TextInput
                     placeholder="Import from URL..."
                     onChangeText={e => {
@@ -454,11 +461,10 @@ export default function Recipes() {
                   />
                 </View>
                 <Button
-                style={{ marginVertical: 10, marginHorizontal: 20 }}
-                leftContent={
+                style={{ marginVertical: 10, marginRight: 20, flex: 1, width: "fit-content" }}
+                text={
                   <Ionicons name="arrow-down-circle-outline" size={20} color={themeColor.white} />
                 }
-                text="Import using AI"
                 status="primary"
                 type="TouchableOpacity"
                 onPress={() => {
@@ -519,6 +525,8 @@ export default function Recipes() {
 
                 }}
               />
+              </View>
+
             </View>
           }
 
@@ -555,42 +563,101 @@ export default function Recipes() {
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                   <View style={{ marginBottom: 20 }}>
-                    <Text fontWeight="bold" style={{ fontSize: 35, marginVertical: 15, marginBottom: 20, textAlign: "center" }}>{recipes[recipeId]['name']}</Text>
-                    <View style={{
-                      display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 20,
-                      width: 150, gap: 8, marginHorizontal: "auto"
-                    }}>
-                    <Text style={{ fontSize: 22, textAlign: "center" }}>Servings: </Text>
-                    <TextInput
-                      onChangeText={(value) => {
-                        
-                        setServings(value)
-
-                        for (let i=0; i < recipes[recipeId]['ing'].length; i++) {
-                          currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(value)
-                        }
-                        forceUpdate()
-                      }}
-                      defaultValue={String(recipes[recipeId]['serving'])}
-                      placeholder="Servings"
-                      keyboardType='numeric'
-                      style={{
-                        width: 100
-                      }}
-                    />
-                    </View>
+                    <Text fontWeight="medium" style={{ fontSize: 35, marginVertical: 15, marginBottom: 30, textAlign: "center", textTransform: "capitalize" }}>{recipes[recipeId]['name']}</Text>
                   </View>
                 </SectionContent>
               </Section>
 
+              <View style={{
+                marginHorizontal: 20, marginTop: 20,
+                display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 0
+              }}>
+
+                <View style={{
+                  display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 20,
+                  width: 75, gap: 8, alignSelf: "flex-start", marginLeft: 40
+                }}>
+                <Text style={{ fontSize: 22, textAlign: "center", marginRight: 15 }}><Ionicons name="people-outline" size={40} color={themeColor.white} /></Text>
+                <TextInput
+                  onChangeText={(value) => {
+                    
+                    setServings(value)
+
+                    for (let i=0; i < recipes[recipeId]['ing'].length; i++) {
+                      currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(value)
+                    }
+                    forceUpdate()
+                  }}
+                  defaultValue={String(recipes[recipeId]['serving'])}
+                  placeholder="Servings"
+                  keyboardType='numeric'
+                  style={{
+                    width: "auto"
+                  }}
+                />
+                </View>
+
+
+                <View style={{ marginBottom: 27, height: 50, marginLeft: 33, width: 200 }}>
+                  <Button
+                    leftContent={
+                      <Ionicons name="play-outline" size={20} color={themeColor.white} />
+                    }
+                    text="Start"
+                    status="primary"
+                    type="TouchableOpacity"
+                    onPress={() => { currentIndex = 0; setshowRecipePage(false); setShowMealEditor(false); setShowWalkthrough(true) }}
+                  />
+                </View>
+
+
+                <MenuView
+                style={{ width: "auto", height: "auto", marginBottom: 30 }}
+                  title="More Actions"
+                  onPressAction={({ nativeEvent }) => {
+                    if (nativeEvent.event == "edit") {setshowRecipePage(false); fetchMeals(); setShowMealEditor(true)}
+                    if (nativeEvent.event == "delete") {setDeleteVisible(true); setshowRecipePage(true)}
+                  }}
+                  actions={[
+                    {
+                      id: 'edit',
+                      title: 'Edit',
+                      titleColor: themeColor.primary,
+                      image: Platform.select({
+                        ios: 'edit',
+                        android: 'ic_menu_edit',
+                      }),
+                      imageColor: themeColor.primary,
+                    },
+                    {
+                      id: 'delete',
+                      title: 'Delete Recipe',
+                      attributes: {
+                        destructive: true,
+                      },
+                      image: Platform.select({
+                        ios: 'trash',
+                        android: 'ic_menu_delete',
+                      }),
+                    }, 
+                  ]}
+                  shouldOpenOnLongPress={false}
+                >
+                  <View style={{ padding: 5, backgroundColor: "#262834", borderRadius: 8, width: "auto" }}>
+                    <Ionicons name="menu" size={40} color={themeColor.white} />
+                  </View>
+                </MenuView>
+              </View>
+
+              <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>Ingredients</Text>
+
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                   <View style={{ marginBottom: 20 }}>
-                    <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold" }}>Ingredients</Text>
                     {currentRecipe['ing'].map((ing, idx) => {
                       return (
                         <View style={{ marginHorizontal: 20, marginTop: 18 }}>
-                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200 }}>{ing.serving_amt} {ing.serving_unit}</Text>} {ing.ing}</Text>
+                          <Text style={{ fontSize: 18.5 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200, fontSize: 18.5 }}>{(new Fraction(ing.serving_amt)).toString()} {ing.serving_unit}</Text>} {ing.ing}</Text>
                         </View>
                       )
                     })}
@@ -598,64 +665,21 @@ export default function Recipes() {
                 </SectionContent>
               </Section>
 
-              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20, marginBottom: 20 }}>
-                <SectionContent>
-                    <View style={{ marginBottom: 20 }}>
-                      <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold" }}>Steps</Text>
-                      {recipes[recipeId]['steps'].map((step, idx) => {
-                        return (
-                          <View style={{ marginHorizontal: 20, marginTop: 15 }}>
-                            <Text style={{ fontSize: 17 }}>{idx + 1}. {step}</Text>
+              <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 18, textAlign: "center" }}>Steps</Text>
+
+              {recipes[recipeId]['steps'].map((step, idx) => {
+                return (
+                    <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginVertical: 7 }}>
+                      <SectionContent>
+                          <View style={{ marginBottom: 10 }}>
+                              <Text style={{ fontSize: 17 }}>{idx + 1}. {step}</Text>
                           </View>
-                        )
-                      })}
-                    </View>
-                </SectionContent>
-              </Section>
+                      </SectionContent>
+                    </Section>
+                )
+              })}
+              <View style={{ marginBottom: 20, height: 20 }}></View>
 
-              <Button
-                style={{ marginVertical: 5, marginHorizontal: 20 }}
-                leftContent={
-                  <Ionicons name="chevron-back" size={20} color={themeColor.white} />
-                }
-                text="Back"
-                status="primary"
-                type="TouchableOpacity"
-                onPress={() => { setshowRecipePage(false) }}
-              />
-
-              <Button
-                style={{ marginVertical: 5, marginHorizontal: 20 }}
-                leftContent={
-                  <Ionicons name="newspaper-outline" size={20} color={themeColor.white} />
-                }
-                text="Start Step-by-Step Instructions"
-                status="primary"
-                type="TouchableOpacity"
-                onPress={() => { currentIndex = 0; setshowRecipePage(false); setShowMealEditor(false); setShowWalkthrough(true) }}
-              />
-
-              <Button
-                style={{ marginVertical: 5, marginHorizontal: 20 }}
-                leftContent={
-                  <Ionicons name="pencil-outline" size={20} color={themeColor.white} />
-                }
-                text="Edit"
-                status="primary"
-                type="TouchableOpacity"
-                onPress={() => { setshowRecipePage(false); fetchMeals(); setShowMealEditor(true) }}
-              />
-
-              <Button
-                style={{ marginTop: 5, marginHorizontal: 20, marginBottom: 20 }}
-                leftContent={
-                  <Ionicons name="trash-outline" size={20} color={themeColor.white} />
-                }
-                text="Delete Recipe"
-                status="danger"
-                type="TouchableOpacity"
-                onPress={() => { setDeleteVisible(true) }}
-              />
             </View>
           }
 
@@ -686,7 +710,7 @@ export default function Recipes() {
                     {currentRecipe['ing'].map((ing, idx) => {
                       return (
                         <View style={{ marginHorizontal: 20, marginTop: 10 }}>
-                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200 }}>{ing.serving_amt} {ing.serving_unit}</Text>} {ing.ing}</Text>
+                          <Text style={{ fontSize: 17 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200 }}>{(new Fraction(ing.serving_amt)).toString()} {ing.serving_unit}</Text>} {ing.ing}</Text>
                         </View>
                       )
                     })}
@@ -817,72 +841,84 @@ export default function Recipes() {
                 return (
                   <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
-                      <View>
-                      <Autocomplete 
-                      data={filterList} 
-                      placeholder="Start typing to search ingredients..." 
-                      defaultValue={field.ing}
-                      onSelect={(item) => {
-                        if (item) {
+                      <View style={{
+                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
+                      }}>
+                        <View style={{ width: "85%" }}>
 
-                          let mealObj = undefined;
+                          <View>
+                          <Autocomplete 
+                          data={filterList} 
+                          placeholder="Start typing to search ingredients..." 
+                          defaultValue={field.ing}
+                          onSelect={(item) => {
+                            if (item) {
 
-                          for (let i = 0; i < mealsList.length; i++) {
-                            if (mealsList[i] === item) {
-                              mealObj = mealsList[i]
-                              let fieldset = fields
+                              let mealObj = undefined;
 
-                              fieldset[idx]['serving_amt'] = "1"
-                              setFields(fieldset)
+                              for (let i = 0; i < mealsList.length; i++) {
+                                if (mealsList[i] === item) {
+                                  mealObj = mealsList[i]
+                                  let fieldset = fields
+
+                                  fieldset[idx]['serving_amt'] = "1"
+                                  setFields(fieldset)
+                                }
+                              }
+
+                              if (!mealObj) {
+                                return
+                              }
+
+                              handleChange(idx, "ing", item);
                             }
-                          }
-
-                          if (!mealObj) {
-                            return
-                          }
-
-                          handleChange(idx, "ing", item);
-                        }
-                      }}
-
-                      onChangeText={e => {
-                        handleChange(idx, "ing", e)
-                      }}
-                      />
-                      </View>
-
-                      <View style={{ marginVertical: 20 }}>
-                        <TextInput
-                          placeholder="Amount"
-                          onChangeText={e => {
-                            handleChange(idx, "serving_amt", Number(e))
                           }}
-                          defaultValue={String(field.serving_amt)}
-                          keyboardType='numeric'
-                        />
-                      </View>
 
-                      <View style={{ marginBottom: 20 }}>
-                        <TextInput
-                          placeholder="Unit (i.e. cups, tbsp, etc)"
                           onChangeText={e => {
-                            handleChange(idx, "serving_unit", e)
+                            handleChange(idx, "ing", e)
                           }}
-                          defaultValue={field.serving_unit}
-                        />
-                      </View>
+                          />
+                          </View>
 
-                      <View style={{ marginBottom: 20 }}>
-                        <Button
-                          style={{ marginTop: 10 }}
-                          leftContent={
-                            <Ionicons name="trash-outline" size={20} color={themeColor.white} />
-                          }
-                          text="Remove"
-                          status="danger"
-                          type="TouchableOpacity"
-                          onPress={() => { handleRemoveIng(idx) }}
-                        />
+                          <View style={{ flexDirection: "row", gap: 8 }}> 
+
+                            <View style={{ marginVertical: 20, flex: 1 }}>
+                              <TextInput
+                                placeholder="Amount"
+                                onChangeText={e => {
+                                  handleChange(idx, "serving_amt", Number(e))
+                                }}
+                                defaultValue={String(field.serving_amt).replace("undefined", "")}
+                                keyboardType='numeric'
+                              />
+                            </View>
+
+                            <View style={{ marginVertical: 20, flex: 3 }}>
+                            <Autocomplete 
+                              data={["cups", "tbsp", "tsp", "g", "kg", "ml", "l", "oz", "lb", "pt", "qt", "gal", "fl oz", "pinch"]} 
+                              placeholder="Unit (i.e. cups, tbsp, etc.)" 
+                              defaultValue={field.serving_unit}
+                              onSelect={(item) => {
+                                handleChange(idx, "serving_unit", item);
+                              }}
+
+                              onChangeText={e => {
+                                handleChange(idx, "serving_unit", e)
+                              }}
+                              />
+                            </View>
+                          </View>
+                          </View>
+
+                          <View style={{ marginBottom: 20 }}>
+                            <Button
+                              text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
+                              outline={true}
+                              status="danger"
+                              type="TouchableOpacity"
+                              onPress={() => { handleRemoveIng(idx) }}
+                            />
+                          </View>
                       </View>
                     </SectionContent>
                   </Section>
@@ -905,7 +941,12 @@ export default function Recipes() {
                 return (
                   <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
-                      <View style={{ marginVertical: 20 }}>
+
+                      <View style={{
+                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
+                      }}>
+
+                      <View style={{ marginVertical: 10, width: "85%" }}>
                         <TextInput
                           placeholder="Enter a step.."
                           onChangeText={e => {
@@ -915,18 +956,17 @@ export default function Recipes() {
                         />
                       </View>
 
-                      <View style={{ marginBottom: 20 }}>
+                      <View style={{ marginVertical: 10 }}>
                         <Button
-                          style={{ marginTop: 10 }}
-                          leftContent={
-                            <Ionicons name="trash-outline" size={20} color={themeColor.white} />
-                          }
-                          text="Remove"
+                          text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
                           status="danger"
                           type="TouchableOpacity"
                           onPress={() => { handleRemoveStep(idx) }}
+                          outline={true}
                         />
                       </View>
+                      </View>
+
                     </SectionContent>
                   </Section>
                 );
