@@ -20,7 +20,6 @@ import { MenuView } from '@react-native-menu/menu';
 import { Fraction } from "fractional";
 import { SwipeablePanel } from 'rn-swipeable-panel';
 import RNJsxParser from 'react-native-jsx-parser';
-import { Tooltip, TooltipContent } from '@gluestack-ui/themed';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -92,7 +91,8 @@ export default function Recipes() {
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [recipeIDToDel, setRIDTD] = React.useState(null)
   const { height: screenHeight } = Dimensions.get('window');
-
+  const [stepIngText, setStepIngText] = React.useState(null);
+  const [stepIngVis, setStepIngVis] = React.useState(false);
 
   const [ingPanelProps, setIngPanelProps] = React.useState({
     fullWidth: true,
@@ -211,6 +211,8 @@ export default function Recipes() {
   function handleCancel () {
     setDeleteVisible(false);
   }
+
+  const closeStepIngDialog = () => setStepIngVis(false);
 
 
   const updateData = () => {
@@ -699,6 +701,13 @@ export default function Recipes() {
               </Section>
 
               <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 18, textAlign: "center" }}>Steps</Text>
+              <Dialog.Container visible={stepIngVis}>
+                <Dialog.Title>Ingredient Amount</Dialog.Title>
+                <Dialog.Description>
+                  {stepIngText}
+                </Dialog.Description>
+                <Dialog.Button label="OK" onPress={closeStepIngDialog} />
+              </Dialog.Container>
 
               {recipes[recipeId]['steps'].map((step, idx) => {
                 let wordArr = step.split(' ');
@@ -706,20 +715,8 @@ export default function Recipes() {
                 wordArr.forEach(function(el) {
                   for (let i=0; i < ingList.length; i++) {
                     if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice"].includes(el.toLowerCase())) {
-                      el = `</Text>
-                      <Tooltip
-                        placement="top" 
-                        trigger={(triggerProps) => {
-                          return (
-                            <Text {...triggerProps} style={{ color: "#adc8ff" }}>${el}</Text>
-                          );
-                        }}
-                      >
-                        <TooltipContent>
-                         <Text>${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}</Text>
-                        </TooltipContent>
-                      </Tooltip><Text>
-                    `;
+                      el = `</Text><View onPress={() => { console.warn("PRESSED"); setStepIngText('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit}'); setStepIngVis(true); console.warn("PRESSED") }}><Text style={{ color: "#adc8ff" }}>${el}</Text></View><Text>`;
+                      el = el
                     } 
                   }
                   text.push(el);
@@ -732,7 +729,7 @@ export default function Recipes() {
                       <SectionContent>
                           <View style={{ marginBottom: 10 }}>
                               <Text style={{ fontSize: 17 }}>{idx + 1}. 
-                                  <RNJsxParser components={{ Text, Tooltip, TooltipContent }} jsx={text} />
+                                  <RNJsxParser bindings={{ setStepIngText: setStepIngText, setStepIngVis: setStepIngVis }} components={{ Text, View }} jsx={text} />
                               </Text>
                           </View>
                       </SectionContent>
