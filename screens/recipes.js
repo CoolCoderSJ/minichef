@@ -19,6 +19,8 @@ import { MenuView } from '@react-native-menu/menu';
 
 import { Fraction } from "fractional";
 import { SwipeablePanel } from 'rn-swipeable-panel';
+import RNJsxParser from 'react-native-jsx-parser';
+import { Tooltip, TooltipContent } from '@gluestack-ui/themed';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -81,6 +83,7 @@ export default function Recipes() {
   const [steps, setSteps] = React.useState([{}]);
   const [filterList, setFilterList] = React.useState([{}]);
   const [servings, setServings] = React.useState(null);
+  const [ingList, setIngList] = React.useState([]);
 
   const [showMealEditor, setShowMealEditor] = React.useState(false);
   const [showRecipePage, setshowRecipePage] = React.useState(false);
@@ -443,7 +446,13 @@ export default function Recipes() {
                   <View>
                     {filterAllowed.includes(idx) &&
                       <View>
-                        <TouchableOpacity onPress={() => { recipeId = idx; setRIDTD(idx); currentRecipe = _.cloneDeep(recipes[recipeId]); setServings(currentRecipe.serving); setshowRecipePage(true) }}>
+                        <TouchableOpacity onPress={() => { recipeId = idx; setRIDTD(idx); currentRecipe = _.cloneDeep(recipes[recipeId]); setServings(currentRecipe.serving); 
+                          let ingl = []
+                          for (let i=0; i < currentRecipe['ing'].length; i++) {
+                            ingl.push(currentRecipe['ing'][i]['ing'])
+                          }
+                          setIngList(ingl)
+                          setshowRecipePage(true) }}>
                           <View style={styles.listItem}>
                             <Text fontWeight="medium">{recipe.name}</Text>
                             <Ionicons
@@ -692,11 +701,39 @@ export default function Recipes() {
               <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 18, textAlign: "center" }}>Steps</Text>
 
               {recipes[recipeId]['steps'].map((step, idx) => {
+                let wordArr = step.split(' ');
+                let text = [];
+                wordArr.forEach(function(el) {
+                  for (let i=0; i < ingList.length; i++) {
+                    if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice"].includes(el.toLowerCase())) {
+                      el = `</Text>
+                      <Tooltip
+                        placement="top" 
+                        trigger={(triggerProps) => {
+                          return (
+                            <Text {...triggerProps} style={{ color: "#adc8ff" }}>${el}</Text>
+                          );
+                        }}
+                      >
+                        <TooltipContent>
+                         <Text>${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}</Text>
+                        </TooltipContent>
+                      </Tooltip><Text>
+                    `;
+                    } 
+                  }
+                  text.push(el);
+                });
+                text = "<Text>" + text.join('&nbsp;') + "</Text>";
+                console.log("STEP", step, text)
+
                 return (
                     <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginVertical: 7 }}>
                       <SectionContent>
                           <View style={{ marginBottom: 10 }}>
-                              <Text style={{ fontSize: 17 }}>{idx + 1}. {step}</Text>
+                              <Text style={{ fontSize: 17 }}>{idx + 1}. 
+                                  <RNJsxParser components={{ Text, Tooltip, TooltipContent }} jsx={text} />
+                              </Text>
                           </View>
                       </SectionContent>
                     </Section>
