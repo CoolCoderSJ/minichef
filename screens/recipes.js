@@ -18,6 +18,7 @@ import Dialog from "react-native-dialog";
 import { MenuView } from '@react-native-menu/menu';
 
 import { Fraction } from "fractional";
+import { SwipeablePanel } from 'rn-swipeable-panel';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -87,6 +88,23 @@ export default function Recipes() {
 
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [recipeIDToDel, setRIDTD] = React.useState(null)
+
+  const [ingPanelProps, setIngPanelProps] = React.useState({
+    fullWidth: true,
+    openLarge: true,
+    showCloseButton: true,
+    onClose: () => closePanel(),
+    onPressCloseButton: () => closePanel(),
+  });
+  const [isPanelActive, setIsPanelActive] = React.useState(false);
+
+  const openPanel = () => {
+    setIsPanelActive(true);
+  };
+
+  const closePanel = () => {
+    setIsPanelActive(false);
+  };
 
 
   const fetchMeals = () => {
@@ -382,6 +400,7 @@ export default function Recipes() {
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           contentInsetAdjustmentBehavior="automatic"
+          style={{ height: "100%" }}
           >
           {!showMealEditor && !showRecipePage && !showWalkthrough &&
             <View>
@@ -686,7 +705,7 @@ export default function Recipes() {
 
 
           {!showMealEditor && !showRecipePage && showWalkthrough &&
-            <View>
+            <View style={{ height: "100%" }}>
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                   <View style={{ marginBottom: 20 }}>
@@ -743,7 +762,17 @@ export default function Recipes() {
               }
 
               {currentIndex > 0 &&
-              <>
+              <View style={{ height: "100%" }}>
+                <View style={{ marginVertical: 25, marginHorizontal: 20 }}>
+                  <Button
+                    text={<Ionicons name="nutrition" size={20} color={themeColor.white} />}
+                    status='primary'
+                    outline={true}
+                    type="TouchableOpacity"
+                    onPress={openPanel}
+                  />
+                </View>
+
                 <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                   <View style={{ marginBottom: 0 }}>
@@ -778,7 +807,18 @@ export default function Recipes() {
                   onPress={() => { currentIndex += 1; forceUpdate() }}
                 />
                 }
-              </>
+
+                <SwipeablePanel {...ingPanelProps} isActive={isPanelActive} style={{ backgroundColor: "#262834", paddingBottom: 20 }} closeOnTouchOutside={true} noBar={true}>
+                  <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>Ingredients</Text>
+
+                  {currentRecipe['ing'].map((ing, idx) => {
+                    return (
+                        <Text style={{ fontSize: 18.5, marginHorizontal: 20, marginTop: 18 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200, fontSize: 18.5 }}>{(new Fraction(ing.serving_amt)).toString()} {ing.serving_unit}</Text>} {ing.ing}</Text>
+                    )
+                  })}
+                </SwipeablePanel>
+
+              </View>
               }
             </View>
           }
