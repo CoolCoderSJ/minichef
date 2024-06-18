@@ -88,6 +88,8 @@ export default function Recipes() {
 
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [recipeIDToDel, setRIDTD] = React.useState(null)
+  const { height: screenHeight } = Dimensions.get('window');
+
 
   const [ingPanelProps, setIngPanelProps] = React.useState({
     fullWidth: true,
@@ -400,7 +402,10 @@ export default function Recipes() {
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           contentInsetAdjustmentBehavior="automatic"
-          style={{ height: "100%" }}
+          contentContainerStyle={{
+            minHeight: screenHeight,
+            flexGrow: 1
+          }}
           >
           {!showMealEditor && !showRecipePage && !showWalkthrough &&
             <View>
@@ -705,7 +710,7 @@ export default function Recipes() {
 
 
           {!showMealEditor && !showRecipePage && showWalkthrough &&
-            <View style={{ height: "100%" }}>
+            <View style={{ flex: 1 }}>
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                   <View style={{ marginBottom: 20 }}>
@@ -808,14 +813,16 @@ export default function Recipes() {
                 />
                 }
 
-                <SwipeablePanel {...ingPanelProps} isActive={isPanelActive} style={{ backgroundColor: "#262834", paddingBottom: 20 }} closeOnTouchOutside={true} noBar={true}>
-                  <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>Ingredients</Text>
+                <SwipeablePanel {...ingPanelProps} isActive={isPanelActive} style={{ backgroundColor: "#262834", paddingBottom: 20, flex: 1, flexGrow: 1, minHeight: screenHeight, marginBottom: 50 }} scrollViewProps={{ flex: 1, flexGrow: 1 }} closeOnTouchOutside={true} noBar={true}>
+                  <ScrollView contentContainerStyle={{ flexGrow: 1, minHeight: screenHeight }}>
+                    <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>Ingredients</Text>
 
-                  {currentRecipe['ing'].map((ing, idx) => {
-                    return (
-                        <Text style={{ fontSize: 18.5, marginHorizontal: 20, marginTop: 18 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200, fontSize: 18.5 }}>{(new Fraction(ing.serving_amt)).toString()} {ing.serving_unit}</Text>} {ing.ing}</Text>
-                    )
-                  })}
+                    {currentRecipe['ing'].map((ing, idx) => {
+                      return (
+                          <Text style={{ fontSize: 18.5, marginHorizontal: 20, marginTop: 18 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200, fontSize: 18.5 }}>{(new Fraction(ing.serving_amt)).toString()} {ing.serving_unit}</Text>} {ing.ing}</Text>
+                      )
+                    })}
+                  </ScrollView>
                 </SwipeablePanel>
 
               </View>
