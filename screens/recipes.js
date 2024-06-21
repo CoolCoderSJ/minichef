@@ -860,7 +860,7 @@ export default function Recipes() {
                   text="Back"
                   color="black100"
                   type="TouchableOpacity"
-                  onPress={() => { currentIndex -= 1; forceUpdate() }}
+                  onPress={() => { currentIndex -= 1; if (currentIndex > 0) updateJSX(currentIndex - 1); forceUpdate() }}
                 />
 
                 {currentIndex < currentRecipe.steps.length &&
