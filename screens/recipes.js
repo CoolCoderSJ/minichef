@@ -11,7 +11,7 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
-import _, { set } from 'lodash';
+import _, { set, update } from 'lodash';
 
 import Autocomplete from '../components/autocomplete';
 import Dialog from "react-native-dialog";
@@ -39,6 +39,7 @@ let filterAllowed = []
 let mealDB = []
 let currentIndex = 0;
 let AIUrl = null;
+let jsxText = "";
 
 console.log(Permission.read(Role.user(userId)),
 Permission.write(Role.user(userId)))
@@ -91,8 +92,6 @@ export default function Recipes() {
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [recipeIDToDel, setRIDTD] = React.useState(null)
   const { height: screenHeight } = Dimensions.get('window');
-  const [stepIngText, setStepIngText] = React.useState(null);
-  const [stepIngVis, setStepIngVis] = React.useState(false);
 
   const [ingPanelProps, setIngPanelProps] = React.useState({
     fullWidth: true,
@@ -212,7 +211,24 @@ export default function Recipes() {
     setDeleteVisible(false);
   }
 
-  const closeStepIngDialog = () => setStepIngVis(false);
+
+  const updateJSX = (index) => {
+    let step = currentRecipe.steps[index];
+    let wordArr = step.split(' ');
+    let text = [];
+    wordArr.forEach(function(el) {
+      for (let i=0; i < ingList.length; i++) {
+        if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice"].includes(el.toLowerCase())) {
+          el = `<Text style={{ color: "#adc8ff", fontSize: 20 }} onPress={() => handlePress('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}')}>${el}</Text>`;
+          el = el
+        } 
+      }
+      text.push(el);
+    });
+    text = "<Text style={{ fontSize: 20, marginBottom: 10 }}>" + text.join('&nbsp;') + "</Text>";
+
+    jsxText = text;
+  }
 
 
   const updateData = () => {
@@ -701,35 +717,37 @@ export default function Recipes() {
               </Section>
 
               <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 18, textAlign: "center" }}>Steps</Text>
-              <Dialog.Container visible={stepIngVis}>
-                <Dialog.Title>Ingredient Amount</Dialog.Title>
-                <Dialog.Description>
-                  {stepIngText}
-                </Dialog.Description>
-                <Dialog.Button label="OK" onPress={closeStepIngDialog} />
-              </Dialog.Container>
-
               {recipes[recipeId]['steps'].map((step, idx) => {
                 let wordArr = step.split(' ');
                 let text = [];
                 wordArr.forEach(function(el) {
                   for (let i=0; i < ingList.length; i++) {
                     if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice"].includes(el.toLowerCase())) {
-                      el = `</Text><View onPress={() => { console.warn("PRESSED"); setStepIngText('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit}'); setStepIngVis(true); console.warn("PRESSED") }}><Text style={{ color: "#adc8ff" }}>${el}</Text></View><Text>`;
+                      el = `<Text style={{ color: "#adc8ff" }} onPress={() => handlePress('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}')}>${el}</Text>`;
                       el = el
                     } 
                   }
                   text.push(el);
                 });
                 text = "<Text>" + text.join('&nbsp;') + "</Text>";
-                console.log("STEP", step, text)
 
                 return (
                     <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginVertical: 7 }}>
                       <SectionContent>
                           <View style={{ marginBottom: 10 }}>
                               <Text style={{ fontSize: 17 }}>{idx + 1}. 
-                                  <RNJsxParser bindings={{ setStepIngText: setStepIngText, setStepIngVis: setStepIngVis }} components={{ Text, View }} jsx={text} />
+                                  <RNJsxParser renderInWrapper={false} bindings={{ 
+                                    handlePress: (textToRender) => {
+                                      Toast.show({
+                                        type: 'info',
+                                        text1: textToRender,
+                                      })
+                                    } 
+                                    }} 
+                                    blacklistedAttrs={[]} 
+                                    showWarnings={true} 
+                                    components={{ Text }} 
+                                    jsx={text} />
                               </Text>
                           </View>
                       </SectionContent>
@@ -795,7 +813,7 @@ export default function Recipes() {
                   text="Next"
                   status="primary"
                   type="TouchableOpacity"
-                  onPress={() => { currentIndex += 1; forceUpdate() }}
+                  onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
                 />
               </>
               }
@@ -817,7 +835,18 @@ export default function Recipes() {
                   <View style={{ marginBottom: 0 }}>
                     <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold", textAlign: "center" }}>Step {currentIndex}</Text>
                       <View style={{ marginHorizontal: 20, marginTop: 10 }}>
-                        <Text style={{ fontSize: 20, marginBottom: 10 }}>{currentRecipe.steps[currentIndex - 1]}</Text>
+                        <RNJsxParser bindings={{ 
+                          handlePress: (textToRender) => {
+                            Toast.show({
+                              type: 'info',
+                              text1: textToRender,
+                            })
+                          } 
+                          }} 
+                          blacklistedAttrs={[]} 
+                          showWarnings={true} 
+                          components={{ Text }} 
+                          jsx={jsxText} />
                       </View>
                   </View>
                 </SectionContent>
@@ -843,7 +872,7 @@ export default function Recipes() {
                   text="Next"
                   status="primary"
                   type="TouchableOpacity"
-                  onPress={() => { currentIndex += 1; forceUpdate() }}
+                  onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
                 />
                 }
 
