@@ -8,9 +8,9 @@ import {
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Layout, Text, Button,
-  themeColor, TopNav, useTheme
+  themeColor, TopNav, useTheme,
+  Section, SectionContent
 } from "react-native-rapi-ui";
-import { createStackNavigator } from "@react-navigation/stack";
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
 import Toast from 'react-native-toast-message';
 
@@ -28,7 +28,6 @@ const getAll = async () => { try { const keys = await AsyncStorage.getAllKeys();
 
 let lists = []
 
-
 let userId
 get("login").then(res => userId = res)
 .then(() => {
@@ -45,9 +44,8 @@ db.listDocuments("data", "grocery", [Query.equal("uid", [userId])]).then(functio
 })
 })
 
-function Grocery () {
+export default function ViewGrocery ({ navigation, route }) {
 
-  const navigation = useNavigation();
   const { isDarkmode, setTheme } = useTheme();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
@@ -74,16 +72,16 @@ function Grocery () {
     const updateData = async () => {
         lists = []
         let result = await db.listDocuments("data", "grocery", [Query.equal("uid", [userId])])
-        if (result.total > 0) {
-            for (let i = 0; i < result.documents.length; i++) {
-                console.log(result.documents[i].items)
-                let doc = JSON.parse(result.documents[i].items)
-                doc.createdAt = result.documents[i].$createdAt
-                let arr = new Date(doc.createdAt).toDateString().split(" ")
-                doc.createdAt = `${arr[1]} ${arr[2]} ${arr[3]}`
-                lists.push(doc)
-            };
-        }
+            if (result.total > 0) {
+                for (let i = 0; i < result.documents.length; i++) {
+                    console.log(result.documents[i].items)
+                    let doc = JSON.parse(result.documents[i].items)
+                    doc.createdAt = result.documents[i].$createdAt
+                    let arr = new Date(doc.createdAt).toDateString().split(" ")
+                    doc.createdAt = `${arr[1]} ${arr[2]} ${arr[3]}`
+                    lists.push(doc)
+                };
+            }
     }
 
     const refreshData = navigation.addListener('focus', () => {
@@ -103,32 +101,30 @@ function Grocery () {
                 />
             }
             leftAction={() => navigation.goBack()}
-            middleContent="Grocery Lists"
+            middleContent={lists[route.params.idx].name}
         />
         <ScrollView>
-        
-        <Button
-            text="Create New List"
-            status="primary"
-            style={{ margin: 20 }}
-            onPress={() => navigation.navigate("Create Grocery List")}
-        />
+    
 
-          {lists.map((list, idx) => {
+          {lists[route.params.idx].items.map((grp, idx) => {
             return (
-                <TouchableOpacity key={idx} onPress={() => navigation.navigate("Grocery List", {idx})}>
-                    <View style={styles.listItem}>
-                    <Text fontWeight="medium">{list.name}</Text>
-                    <View style={{ flexDirection: "row", gap: 4 }}>
-                        <Text italic={true}>{list.createdAt}</Text>
-                        <Ionicons
-                            name="chevron-forward"
-                            size={20}
-                            color={isDarkmode ? themeColor.white : themeColor.black}
-                        />
+                <>
+                <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>{grp.src}</Text>
+
+                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <SectionContent>
+                    <View style={{ marginBottom: 20 }}>
+                    {grp.items.map((item, idx) => {
+                        return (
+                        <View style={{ marginHorizontal: 20, marginTop: 15 }}>
+                            <Text style={{ fontSize: 18.5 }}>{item}</Text>
+                        </View>
+                        )
+                    })}
                     </View>
-                    </View>
-                </TouchableOpacity>
+                </SectionContent>
+                </Section>
+                </>
             )
           })}
         </ScrollView>
@@ -137,25 +133,3 @@ function Grocery () {
       </Layout>
   );
 }
-
-
-const GroceryStack = createStackNavigator();
-
-import ViewGrocery from './view_grocery';
-import CreateGrocery from './create_grocery';
-
-export default function GMain() {
-    return (
-      <GroceryStack.Navigator
-        initialRouteName="Main"
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <GroceryStack.Screen name="Main" component={Grocery} />
-        <GroceryStack.Screen name="Grocery List" component={ViewGrocery} />
-        <GroceryStack.Screen name="Create Grocery List" component={CreateGrocery} />
-
-      </GroceryStack.Navigator>
-    );
-  }
