@@ -62,17 +62,6 @@ function Index () {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Ingredients")}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Ingredients"}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
-          </TouchableOpacity>
-
           <TouchableOpacity onPress={() => navigation.navigate("Unit Conversion")}>
             <View style={styles.listItem}>
               <Text fontWeight="medium">{"Unit Conversion"}</Text>
@@ -116,7 +105,7 @@ function Index () {
 }
 
 import Recipes from './recipes';
-import Ingredients from './ingredients';
+import Grocery from './grocery';
 import UnitConversion from "./unitconversion";
 import Settings from "./settings";
 
@@ -133,7 +122,7 @@ export default App = () => {
 
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'Recipes') iconName = focused ? 'book' : 'book-outline';
-          else if (route.name === 'Ingredients') iconName = focused ? 'nutrition' : 'nutrition-outline';
+          else if (route.name === 'Grocery Lists') iconName = focused ? 'newspaper' : 'newspaper-outline';
           else if (route.name === 'Unit Conversion') iconName = focused ? 'calculator' : 'calculator-outline';
           else if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
 
@@ -160,7 +149,7 @@ export default App = () => {
         
         <Tab.Screen name="Home" component={Index} />
         <Tab.Screen name="Recipes" component={Recipes} />
-        <Tab.Screen name="Ingredients" component={Ingredients} />
+        <Tab.Screen name="Grocery Lists" component={Grocery} />
         <Tab.Screen name="Unit Conversion" component={UnitConversion} />
         <Tab.Screen name="Settings" component={Settings} />
 

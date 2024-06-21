@@ -41,8 +41,6 @@ let currentIndex = 0;
 let AIUrl = null;
 let jsxText = "";
 
-console.log(Permission.read(Role.user(userId)),
-Permission.write(Role.user(userId)))
 
 let userId
 get("login").then(res => userId = res)
@@ -230,6 +228,30 @@ export default function Recipes() {
     jsxText = text;
   }
 
+  const updateIngredients = async () => {
+    let allIng = [];
+    for (let i = 0; i < recipes.length; i++) {
+      for (let j = 0; j < recipes[i].ing.length; j++) {
+        allIng.push(recipes[i].ing[j].ing.toLowerCase())
+      }
+    }
+    
+    allIng = [...new Set(allIng)]
+
+    try {
+      await db.createDocument("data", "ingredients", userId, {uid: userId, items: allIng}, [
+        Permission.read(Role.user(userId)),
+        Permission.write(Role.user(userId)),
+        Permission.update(Role.user(userId)),
+        Permission.delete(Role.user(userId)),
+      ]);
+    } 
+
+    catch {
+      await db.updateDocument("data", "ingredients", userId, {items: allIng})
+    }
+  }
+
 
   const updateData = () => {
     let ing = [];
@@ -313,6 +335,8 @@ export default function Recipes() {
       type: 'info',
       text1: 'Saving...',
     });
+
+    updateIngredients()
 
     for (let i = 0; i < recipes.length; i++) {
       if (recipes[i]['name'] == "") {
@@ -545,6 +569,7 @@ export default function Recipes() {
                           res = res.responseBody
                           Toast.hide()
                           updateData()
+                          updateIngredients()
                           forceUpdate()
                           Toast.show({
                             type: "success",
