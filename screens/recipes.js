@@ -218,7 +218,7 @@ export default function Recipes() {
     let text = [];
     wordArr.forEach(function(el) {
       for (let i=0; i < ingList.length; i++) {
-        if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice"].includes(el.toLowerCase())) {
+        if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice", "and"].includes(el.toLowerCase())) {
           el = `<Text style={{ color: "#adc8ff", fontSize: 20 }} onPress={() => handlePress('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}')}>${el}</Text>`;
           el = el
         } 
