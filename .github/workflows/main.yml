@@ -25,7 +25,7 @@ jobs:
       - name: Install deps
         run: yarn install && yarn global add eas-cli
       - name: Patch rapi-ui
-        run: sed -i 's/ios-close/close/g' node_modules/react-native-rapi-ui/components/Picker/Picker.tsx
+        run: sed -i '' 's/ios-close/close/g' node_modules/react-native-rapi-ui/components/Picker/Picker.tsx
       - name: Load credentials
         run: echo ${{ vars.CREDENTIALS_JSON_BASE64 }} | base64 -d > credentials.json
       - name: Setup Expo and EAS
