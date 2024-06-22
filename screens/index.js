@@ -9,7 +9,7 @@ import {
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Layout, Text, Button,
-  themeColor, TopNav, useTheme
+  themeColor, TopNav, useTheme, Section, SectionContent
 } from "react-native-rapi-ui";
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -52,52 +52,53 @@ function Index () {
         <ScrollView>
 
           <TouchableOpacity onPress={() => navigation.navigate("Recipes")}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Recipes"}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
+            <Section style={{ marginTop: 30, marginHorizontal: 20 }}>
+              <SectionContent>
+                <View style={{ 
+                  flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <Ionicons name="book" size={100} color={themeColor.primary300} style={{ flex: 1 }} />
+                  <View style={{ flex: 2 }}>
+                    <Text fontWeight="bold" style={{ fontSize: 25 }}>Recipes</Text>
+                    <Text style={{ fontSize: 15 }}>View and manage your recipes</Text>
+                  </View>
+                </View>
+              </SectionContent>
+            </Section>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate("Grocery Lists")}>
+            <Section style={{ marginTop: 30, marginHorizontal: 20 }}>
+              <SectionContent>
+                <View style={{
+                  flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <View style={{ flex: 2 }}>
+                    <Text fontWeight="bold" style={{ fontSize: 25 }}>Grocery Lists</Text>
+                    <Text style={{ fontSize: 15 }}>View and manage your grocery lists</Text>
+                  </View>
+                  <Ionicons name="newspaper" size={100} color={themeColor.primary300} style={{ flex: 1 }} />
+                </View>
+              </SectionContent>
+            </Section>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate("Unit Conversion")}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Unit Conversion"}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
+            <Section style={{ marginTop: 30, marginHorizontal: 20 }}>
+              <SectionContent>
+                <View style={{
+                  flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <Ionicons name="calculator" size={100} color={themeColor.primary300} style={{ flex: 1 }} />
+                  <View style={{ flex: 2 }}>
+                    <Text fontWeight="bold" style={{ fontSize: 25 }}>Unit Conversion</Text>
+                    <Text style={{ fontSize: 15 }}>Convert units of measurement</Text>
+                  </View>
+                </View>
+              </SectionContent>
+            </Section>
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">{"Settings"}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
-          </TouchableOpacity>
-
-
-          <TouchableOpacity style={{ marginTop: 50 }} onPress={() => {
-            // Delete the login information, then go back to login
-            delkey("login").then(() => { navigation.navigate("login"); forceUpdate() })
-          }}>
-            <View style={styles.listItem}>
-              <Text fontWeight="medium">Logout</Text>
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color={isDarkmode ? themeColor.white : themeColor.black}
-              />
-            </View>
-          </TouchableOpacity>
+          
 
         </ScrollView>
       </Layout>

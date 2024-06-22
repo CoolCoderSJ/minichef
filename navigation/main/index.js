@@ -7,6 +7,7 @@ import React from "react";
 
 import App from "../../screens/index";
 import Login from "../../screens/login";
+import welcome from "../../screens/welcome";
 
 // Create the navigation stack
 const MainStack = createStackNavigator();
@@ -19,11 +20,12 @@ const Main = () => {
       }
     }}>
       <MainStack.Navigator
-        initialRouteName="Login"
+        initialRouteName="Welcome"
         screenOptions={{
           headerShown: false,
         }}
       >
+        <MainStack.Screen name="Welcome" component={welcome} />
         <MainStack.Screen name="login" component={Login} />
         <MainStack.Screen name="app" component={App} />
 

@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, StyleSheet } from "react-native";
 import {
   Button, Layout, Section, SectionContent, Text,
   TextInput,
@@ -12,6 +12,7 @@ import {
 import { Client, Account, Functions, Databases, Query } from 'react-native-appwrite';
 import Dialog from "react-native-dialog";
 import Toast from 'react-native-toast-message';
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 console.disableYellowBox = true;
 
@@ -41,6 +42,19 @@ export default Settings = () => {
   const [error, setError] = React.useState('');
   const [dialogVisible, setDialogVisible] = React.useState(false);
   const [deleteVisible, setDeleteVisible] = React.useState(false);  
+
+  const styles = StyleSheet.create({
+    listItem: {
+      marginHorizontal: 20,
+      marginTop: 20,
+      padding: 20,
+      backgroundColor: isDarkmode ? "#262834" : "white",
+      borderRadius: 10,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+  });
 
   const closeDialog = () => {
     setDialogVisible(false)
@@ -206,6 +220,21 @@ export default Settings = () => {
             type="TouchableOpacity"
             onPress={initiateDelete}
             />
+
+          <TouchableOpacity style={{ marginTop: 50 }} onPress={() => {
+            // Delete the login information, then go back to login
+            delkey("login").then(() => { navigation.navigate("Welcome"); forceUpdate() })
+          }}>
+            <View style={styles.listItem}>
+              <Text fontWeight="medium">Logout</Text>
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={isDarkmode ? themeColor.white : themeColor.black}
+              />
+            </View>
+          </TouchableOpacity>
+
       </ScrollView>
 
       <Toast />

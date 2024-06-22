@@ -137,6 +137,15 @@ export default Login = () => {
         middleContent="Login"
       />
       <ScrollView>
+
+        <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
+          <SectionContent>
+            <View>
+              <Text>If you don't have an account, one will be made for you upon logging in.</Text>
+            </View>
+          </SectionContent>
+        </Section>
+
         <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
           <SectionContent>
             <View style={{ marginBottom: 20 }}>
