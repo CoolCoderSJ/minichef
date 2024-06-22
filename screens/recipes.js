@@ -41,7 +41,7 @@ let mealDB = []
 let currentIndex = 0;
 let AIUrl = null;
 let jsxText = "";
-
+let newFromHome = false;
 
 let userId
 get("login").then(res => userId = res)
@@ -405,9 +405,14 @@ export default function Recipes() {
       navigation.goBack();
       return true;
     }
-    if (showMealEditor) {
+    if (showMealEditor && !newFromHome) {
       setShowMealEditor(false)
       setshowRecipePage(true)
+      return true;
+    }
+    if (showMealEditor && newFromHome) {
+      setShowMealEditor(false)
+      setshowRecipePage(false)
       return true;
     }
     if (showRecipePage) {
@@ -521,6 +526,7 @@ export default function Recipes() {
                 type="TouchableOpacity"
                 onPress={() => {
                   recipeId = recipes.length;
+                  newFromHome = true;
                   fetchMeals();
                 }}
               />
@@ -692,7 +698,7 @@ export default function Recipes() {
                 style={{ width: "auto", height: "auto", marginBottom: 30 }}
                   title="More Actions"
                   onPressAction={({ nativeEvent }) => {
-                    if (nativeEvent.event == "edit") {setshowRecipePage(false); fetchMeals(); setShowMealEditor(true)}
+                    if (nativeEvent.event == "edit") { newFromHome = false; setshowRecipePage(false); fetchMeals(); setShowMealEditor(true)}
                     if (nativeEvent.event == "delete") {setDeleteVisible(true); setshowRecipePage(true)}
                   }}
                   actions={[

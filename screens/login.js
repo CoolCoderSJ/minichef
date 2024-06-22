@@ -9,7 +9,7 @@ import {
   TextInput,
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
-import { Client, Account, ID } from 'react-native-appwrite';
+import { Client, Account, ID, Databases, Query, Permission, Role } from 'react-native-appwrite';
 import Dialog from "react-native-dialog";
 
 // Disable warnings that aren't important
@@ -25,6 +25,7 @@ client
   .setProject('minichef')
   .setPlatform('dev.shuchir.minichef');
 
+db = new Databases(client);
 account = new Account(client);
 
 // Initialize database methods
@@ -54,8 +55,11 @@ export default Login = () => {
   })
 
   async function register(email, password) {
+    let newSignup = false;
+
     try {
       await account.create(ID.unique(), email, password);
+      newSignup = true;
     }
     catch {}
 
@@ -67,6 +71,51 @@ export default Login = () => {
     try { 
       await account.createEmailPasswordSession(email, password);
       let details = await account.get();
+      let userId = details['$id'];
+      if (newSignup) {
+        await db.createDocument("data", "recipes", ID.unique(), {
+          uid: details['$id'],
+          ingredients: ["Water", "Tea", "Milk"],
+          serving_units: ["cups", "spoons", "(estimate by color)"],
+          serving_amt: [0.5, 2, 0],
+          steps: ['Add the water to a pan and bring it to a boil.', 'Add the tea leaves and let it steep for a few minutes.', 'Add the milk and bring it to a boil again.', 'Strain the tea into drinking cups. Enjoy!'],
+          name: "Milk Tea",
+          servings: 2
+        }, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ]);
+        
+        let data = {
+          name: "Sample List", 
+          items: [
+            {
+              src: "Milk Tea",
+              items: [
+                "0.5 cups water",
+                "2 spoons tea",
+                "milk"
+              ]
+            },
+            {
+              src: "Other",
+              items: [
+                "5 apples",
+                "1 cup sugar",
+                "1 cup flour"
+              ]
+            }
+          ]
+        }
+        await db.createDocument("data", "grocery", ID.unique(), {uid: userId, items: JSON.stringify(data)}, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ])
+      }
       console.log("DETAILS", details)
       setPlain("login", details['$id'])
       setLoading(false)
