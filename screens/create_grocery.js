@@ -14,6 +14,7 @@ import {
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
 import Toast from 'react-native-toast-message';
 import Autocomplete from '../components/autocomplete';
+import Modal from "react-native-modal";
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -27,8 +28,31 @@ const get = async (key) => { try { const value = await AsyncStorage.getItem(key)
 const delkey = async (key, value) => { try { await AsyncStorage.removeItem(key) } catch (e) { console.log(e) } }
 const getAll = async () => { try { const keys = await AsyncStorage.getAllKeys(); return keys } catch (error) { console.error(error) } }
 
-let userId, mealDB = [], ing = [], carbFood = []
+let userId, mealDB = [], ing = [], carbFood = [], recipes = [], ingredients = [], name = ""
 get("login").then(res => userId = res)
+.then(() => {
+    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+        if (result.total > 0) {
+            for (let i = 0; i < result.documents.length; i++) {
+              let ing = []
+              for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                ing.push({
+                  ing: result.documents[i].ingredients[j],
+                  serving_amt: result.documents[i].serving_amt[j],
+                  serving_unit: result.documents[i].serving_units[j]
+                });
+              }
+              recipes.push({
+                name: result.documents[i].name,
+                ing: ing,
+                steps: result.documents[i].steps,
+                serving: result.documents[i].servings,
+                recipeId: result.documents[i]['$id']
+              })
+            };
+          }
+    })
+})
 
 export default function CreateGrocery ({ navigation, route }) {
 
@@ -37,6 +61,7 @@ export default function CreateGrocery ({ navigation, route }) {
   const [filterList, setFilterList] = React.useState([]);
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [showRecipePicker, setShowRecipePicker] = React.useState(false);
+  const [showImport, setShowImport] = React.useState(false);
 
   const styles = StyleSheet.create({
     listItem: {
@@ -53,6 +78,7 @@ export default function CreateGrocery ({ navigation, route }) {
 
   React.useEffect(() => {
     const refreshData = navigation.addListener('focus', () => {
+        recipes = []
         db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
             console.log("ingredients", result)
               if (result.total > 0) {
@@ -65,6 +91,28 @@ export default function CreateGrocery ({ navigation, route }) {
               filter.push(mealDB[i]);
           }
             setFilterList(filter);
+        })
+
+        db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+            if (result.total > 0) {
+                for (let i = 0; i < result.documents.length; i++) {
+                  let ing = []
+                  for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                    ing.push({
+                      ing: result.documents[i].ingredients[j],
+                      serving_amt: result.documents[i].serving_amt[j],
+                      serving_unit: result.documents[i].serving_units[j]
+                    });
+                  }
+                  recipes.push({
+                    name: result.documents[i].name,
+                    ing: ing,
+                    steps: result.documents[i].steps,
+                    serving: result.documents[i].servings,
+                    recipeId: result.documents[i]['$id']
+                  })
+                };
+              }
         })
       })
       return refreshData;
@@ -249,6 +297,7 @@ export default function CreateGrocery ({ navigation, route }) {
                             updateField(idx, "src", value);
                             }}
                             placeholder="Category Name"
+                            defaultValue={field.src}
                         />
                         </View>
                     </SectionContent>
@@ -282,7 +331,7 @@ export default function CreateGrocery ({ navigation, route }) {
                             <View style={{ marginVertical: 20, flex: 1 }}>
                                 <TextInput
                                 placeholder="Amt"
-                                defaultValue={item.amount}
+                                defaultValue={String(item.amount).replace("undefined", "")}
                                 onChangeText={e => {
                                     updateFood(idx, id, e, "amount");
                                 }}
@@ -395,7 +444,79 @@ export default function CreateGrocery ({ navigation, route }) {
                     type="TouchableOpacity"
                     onPress={() => setShowRecipePicker(false)}
                     />
-            </View>
+                </View>
+
+                {recipes.map((recipe, idx) => {
+                    return (
+                        <TouchableOpacity key={idx} onPress={() => {
+                            ingredients = []
+                            for (let i = 0; i < recipe.ing.length; i++) {
+                                ingredients.push({
+                                    name: recipe.ing[i].ing,
+                                    amount: recipe.ing[i].serving_amt * recipe.serving,
+                                    unit: recipe.ing[i].serving_unit
+                                })
+                            }
+                            name = recipe.name
+                            setShowImport(true)
+                        }}>
+                            <View style={styles.listItem}>
+                                <Text fontWeight="medium">{recipe.name}</Text>
+                                <View style={{ flexDirection: "row", gap: 4 }}>
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={isDarkmode ? themeColor.white : themeColor.black}
+                                    />
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    )
+                })}
+
+                <Modal isVisible={showImport} style={{ paddingTop: 40, backgroundColor: "#262834", borderRadius: 12, height: "100%" }}>
+                    <View style={{ flex: 1 }}>
+                    {ingredients.map((ing, idx) => {
+                        return (
+                        <View style={{ marginHorizontal: 20, marginTop: 15 }}>
+                            <Text style={{ fontSize: 18.5 }}>{ing.amount} {ing.unit} {ing.name}</Text>
+                        </View>
+                        )
+                    })}
+                    
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginHorizontal: 20, gap: 8, marginTop: 40 }}>
+                        <Button
+                        style={{ marginVertical: 10, flex: 1 }}
+                        leftContent={
+                            <Ionicons name="backspace-outline" size={20} color={themeColor.primary} />
+                        }
+                        text="Cancel"
+                        status="primary"
+                        outline={true}
+                        type="TouchableOpacity"
+                        onPress={() => setShowImport(false)}
+                        />
+
+                        <Button
+                        style={{ marginVertical: 10, flex: 1 }}
+                        leftContent={
+                            <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
+                        }
+                        text="Add to List"
+                        status="primary"
+                        type="TouchableOpacity"
+                        onPress={() => {
+                            let fieldset = form.items
+                            fieldset.push({src: name, items: ingredients})
+                            setForm({...form, items: fieldset})
+                            setShowImport(false)
+                            setShowRecipePicker(false)
+                        }}
+                        />
+                    </View>
+                    </View>
+                </Modal>
+
             </View>
             }
 
