@@ -40,4 +40,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: build
-          path: build.ipa
+          path: /Users/runner/work/minichef/minichef/build.ipa
