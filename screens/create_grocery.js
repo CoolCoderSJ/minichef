@@ -13,6 +13,7 @@ import {
 } from "react-native-rapi-ui";
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
 import Toast from 'react-native-toast-message';
+import Autocomplete from '../components/autocomplete';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -35,6 +36,7 @@ export default function CreateGrocery ({ navigation, route }) {
   const [form, setForm] = React.useState({ name: "", items: [] });
   const [filterList, setFilterList] = React.useState([]);
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  const [showRecipePicker, setShowRecipePicker] = React.useState(false);
 
   const styles = StyleSheet.create({
     listItem: {
@@ -75,20 +77,21 @@ export default function CreateGrocery ({ navigation, route }) {
   }
 
     const updateFood = (idx, id, value, field) => {
+        console.log("UPDATE", idx, id, value, field)
         let fieldset = form.items
         fieldset[idx].items[id][field] = value
         setForm({...form, items: fieldset})
     }
 
     const handleAddIng = (idx) => {
-        let fieldset = form.items[idx].items
-        fieldset.push({name: "", amount: "", unit: ""})
+        let fieldset = form.items
+        fieldset[idx].items.push({name: "", amount: "", unit: ""})
         setForm({...form, items: fieldset})
     }
 
     const handleRemoveIng = (idx, id) => {
-        let fieldset = form.items[idx, id].items
-        fieldset.splice(id, 1)
+        let fieldset = form.items
+        fieldset[idx, id].items.splice(id, 1)
         setForm({...form, items: fieldset})
     }
 
@@ -105,7 +108,91 @@ export default function CreateGrocery ({ navigation, route }) {
     }
     
     const save = async () => {
+        Toast.show({
+            text1: "Saving",
+            text2: "Please wait...",
+            type: "info",
+        })
 
+        if (form.name === "") {
+            Toast.show({
+                text1: "Error",
+                text2: "List name cannot be empty",
+                type: "error",
+            });
+            return;
+        }
+
+        for (let i = 0; i < form.items.length; i++) {
+            if (form.items[i].src === "") {
+                Toast.show({
+                    text1: "Error",
+                    text2: "Category name cannot be empty",
+                    type: "error",
+                });
+                return;
+            }
+            for (let j = 0; j < form.items[i].items.length; j++) {
+                if (form.items[i].items[j].name === "") {
+                    Toast.show({
+                        text1: "Error",
+                        text2: "Food item name cannot be empty",
+                        type: "error",
+                    });
+                    return;
+                }
+                if (form.items[i].items[j].amount === "") {
+                    Toast.show({
+                        text1: "Error",
+                        text2: "Food item amount cannot be empty",
+                        type: "error",
+                    });
+                    return;
+                }
+            }
+        }
+
+        let data = {
+            name: form.name,
+            items: []
+        }
+
+        for (let i = 0; i < form.items.length; i++) {
+            let cat = {
+                src: form.items[i].src,
+                items: []
+            }
+            for (let j = 0; j < form.items[i].items.length; j++) {
+                cat.items.push(`${form.items[i].items[j].amount} ${form.items[i].items[j].unit} ${form.items[i].items[j].name}`)
+            }
+            data.items.push(cat)
+        }
+
+        db.createDocument("data", "grocery", ID.unique(), {uid: userId, items: JSON.stringify(data)}, [
+            Permission.read(Role.user(userId)),
+            Permission.write(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+          ]).then(function (result) {
+            console.log(result)
+            Toast.show({
+                text1: "Success",
+                text2: "Grocery list created successfully",
+                type: "success",
+            });
+            navigation.goBack()
+        }).catch(function (error) {
+            console.log(error)
+            Toast.show({
+                text1: "Error",
+                text2: "An error occurred",
+                type: "error",
+            });
+        })
+    }
+
+    const fromRecipe = () => {
+        
     }
 
   return (
@@ -123,7 +210,7 @@ export default function CreateGrocery ({ navigation, route }) {
         />
         <ScrollView>
     
-
+        {!showRecipePicker &&
         <View>
             <View style={{ paddingBottom: 20 }}>
                 <Button
@@ -154,7 +241,7 @@ export default function CreateGrocery ({ navigation, route }) {
             {form.items.map((field, idx) => {
             return (
                 <>
-                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 40 }}>
                     <SectionContent>
                         <View style={{ marginBottom: 20 }}>
                         <TextInput
@@ -166,8 +253,7 @@ export default function CreateGrocery ({ navigation, route }) {
                         </View>
                     </SectionContent>
                 </Section>
-
-                {form.items[idx].items.map((item, id) => {
+                {field.items.map((item, id) => {
                     return (
                     <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
@@ -180,8 +266,9 @@ export default function CreateGrocery ({ navigation, route }) {
                             <Autocomplete 
                             data={filterList} 
                             placeholder="Start typing to search foods..." 
-                            onSelect={(item) => {
-                            updateFood(idx, id, item, "name");
+                            defaultValue={item.name}
+                            onSelect={(e) => {
+                            updateFood(idx, id, e, "name");
                             }}
     
                             onChangeText={e => {
@@ -194,7 +281,8 @@ export default function CreateGrocery ({ navigation, route }) {
     
                             <View style={{ marginVertical: 20, flex: 1 }}>
                                 <TextInput
-                                placeholder="Amount"
+                                placeholder="Amt"
+                                defaultValue={item.amount}
                                 onChangeText={e => {
                                     updateFood(idx, id, e, "amount");
                                 }}
@@ -206,8 +294,9 @@ export default function CreateGrocery ({ navigation, route }) {
                             <Autocomplete 
                                 data={["cups", "tbsp", "tsp", "g", "kg", "ml", "l", "oz", "lb", "pt", "qt", "gal", "fl oz", "pinch"]} 
                                 placeholder="Unit (i.e. cups, tbsp, etc.)" 
-                                onSelect={(item) => {
-                                updateFood(idx, id, item, "unit");
+                                defaultValue={item.unit}
+                                onSelect={(e) => {
+                                updateFood(idx, id, e, "unit");
                                 }}
     
                                 onChangeText={e => {
@@ -233,43 +322,84 @@ export default function CreateGrocery ({ navigation, route }) {
                     )
                 })}
 
-            <Button
-            style={{ marginVertical: 10, marginHorizontal: 20 }}
-            leftContent={
-                <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
-            }
-            text="Add New Food Item"
-            status="primary"
-            type="TouchableOpacity"
-            onPress={() => handleAddIng(idx)}
-            />
-            <Button 
-            style={{ marginVertical: 10, marginHorizontal: 20 }}
-            leftContent={
-                <Ionicons name="trash-outline" size={20} color={themeColor.white} />
-            }
-            text="Remove Category"
-            status="danger"
-            type="TouchableOpacity"
-            onPress={handleRemoveCat}
-            />
+                <View style={{
+                    flexDirection: "row", marginHorizontal: 20, justifyContent: "space-between", gap: 8
+                }}>
+                    <Button
+                    style={{ marginVertical: 10, flex: 1 }}
+                    leftContent={
+                        <Ionicons name="add-circle-outline" size={20} color={themeColor.primary} />
+                    }
+                    text="New Food Item"
+                    status="primary"
+                    type="TouchableOpacity"
+                    onPress={() => handleAddIng(idx)}
+                    outline={true}
+                    />
+
+                    <Button 
+                    style={{ marginVertical: 10, flex: 1 }}
+                    leftContent={
+                        <Ionicons name="trash-outline" size={20} color={themeColor.danger} />
+                    }
+                    text="Remove Category"
+                    status="danger"
+                    type="TouchableOpacity"
+                    onPress={() => handleRemoveCat(idx)}
+                    outline={true}
+                    />
+                </View>
 
                 </>
             );
             })}
-
+            
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginHorizontal: 20, gap: 8, marginTop: 40 }}>
             <Button
-            style={{ marginVertical: 10, marginHorizontal: 20 }}
+            style={{ marginVertical: 10, flex: 1 }}
             leftContent={
                 <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
             }
-            text="Add New Category"
+            text="New Category"
             status="primary"
             type="TouchableOpacity"
             onPress={handleAddCat}
             />
 
+            <Button
+            style={{ marginVertical: 10, flex: 1 }}
+            leftContent={
+                <Ionicons name="add-circle-outline" size={20} color={themeColor.primary} />
+            }
+            text="From Recipe"
+            status="primary"
+            type="TouchableOpacity"
+            outline={true}
+            onPress={() => setShowRecipePicker(true)}
+            />
             </View>
+
+            </View>
+            }
+
+            {showRecipePicker &&
+            <View>
+                <View style={{ paddingBottom: 20 }}>
+                    <Button
+                    style={{ marginVertical: 10, marginHorizontal: 20 }}
+                    leftContent={
+                        <Ionicons name="backspace-outline" size={20} color={themeColor.white} />
+                    }
+                    text="Cancel"
+                    status='primary'
+                    type="TouchableOpacity"
+                    onPress={() => setShowRecipePicker(false)}
+                    />
+            </View>
+            </View>
+            }
+
+
         </ScrollView>
 
         <Toast />

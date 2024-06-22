@@ -36,6 +36,7 @@ db.listDocuments("data", "grocery", [Query.equal("uid", [userId])]).then(functio
         for (let i = 0; i < result.documents.length; i++) {
             let doc = JSON.parse(result.documents[i].items)
             doc.createdAt = result.documents[i].$createdAt
+            doc.$id = result.documents[i].$id
             let arr = new Date(doc.createdAt).toDateString().split(" ")
             doc.createdAt = `${arr[1]} ${arr[2]} ${arr[3]}`
             lists.push(doc)
@@ -77,6 +78,7 @@ export default function ViewGrocery ({ navigation, route }) {
                     console.log(result.documents[i].items)
                     let doc = JSON.parse(result.documents[i].items)
                     doc.createdAt = result.documents[i].$createdAt
+                    doc.$id = result.documents[i].$id
                     let arr = new Date(doc.createdAt).toDateString().split(" ")
                     doc.createdAt = `${arr[1]} ${arr[2]} ${arr[3]}`
                     lists.push(doc)
@@ -90,6 +92,40 @@ export default function ViewGrocery ({ navigation, route }) {
     return refreshData;
   }, [navigation]);
 
+  const delGrocery = () => {
+    Alert.alert(
+      "Delete Grocery List",
+      "Are you sure you want to delete this grocery list?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "Delete", onPress: () => {
+          if (!lists[route.params.idx]) {
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Lists still loading. Try again later.'
+            })
+            return
+          }
+
+          db.deleteDocument("data", "grocery", lists[route.params.idx].$id).then(() => {
+            Toast.show({
+              type: 'success',
+              text1: 'Deleted',
+              text2: 'Grocery list has been deleted'
+            })
+            navigation.goBack()
+          })
+        } }
+      ],
+      { cancelable: false }
+    );
+  }
+
   return (
       <Layout>
         <TopNav
@@ -101,12 +137,26 @@ export default function ViewGrocery ({ navigation, route }) {
                 />
             }
             leftAction={() => navigation.goBack()}
-            middleContent={lists[route.params.idx].name}
+            middleContent={lists[route.params.idx] ? lists[route.params.idx].name : "Loading list..."}
         />
         <ScrollView>
+
+          <View style={{ paddingBottom: 20 }}>
+              <Button
+              style={{ marginVertical: 10, marginHorizontal: 20 }}
+              leftContent={
+                  <Ionicons name="trash-outline" size={20} color={themeColor.danger} />
+              }
+              text="Delete List"
+              status='danger'
+              type="TouchableOpacity"
+              outline={true}
+              onPress={delGrocery}
+              />
+          </View>
     
 
-          {lists[route.params.idx].items.map((grp, idx) => {
+          {lists[route.params.idx] ? lists[route.params.idx].items.map((grp, idx) => {
             return (
                 <>
                 <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>{grp.src}</Text>
@@ -126,7 +176,7 @@ export default function ViewGrocery ({ navigation, route }) {
                 </Section>
                 </>
             )
-          })}
+          }) : ""}
         </ScrollView>
 
         <Toast />
