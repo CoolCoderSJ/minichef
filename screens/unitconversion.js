@@ -12,6 +12,8 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 
+console.disableYellowBox = true;
+
 // Initialize the variables
 
 export default function UnitConversion () {    

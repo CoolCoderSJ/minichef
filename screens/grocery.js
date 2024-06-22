@@ -19,6 +19,7 @@ const client = new Client()
     .setProject('minichef'); // Your project ID
 
 const db = new Databases(client);
+console.disableYellowBox = true;
 
 
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }

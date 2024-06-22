@@ -14,6 +14,7 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+console.disableYellowBox = true;
 
 
 // Initialize the database functions
@@ -98,7 +99,7 @@ function Index () {
               </SectionContent>
             </Section>
           </TouchableOpacity>
-          
+
 
         </ScrollView>
       </Layout>
