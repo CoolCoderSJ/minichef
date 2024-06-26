@@ -203,6 +203,7 @@ export default Login = () => {
               <TextInput
                 placeholder="Enter an email address"
                 onChangeText={(value) => setData({ ...formData, username: value })}
+                keyboardType="email-address"
               />
             </View>
             <View style={{ marginBottom: 20 }}>
@@ -213,6 +214,7 @@ export default Login = () => {
               <TextInput
                 placeholder="Enter your password"
                 onChangeText={(value) => setData({ ...formData, password: value })}
+                secureTextEntry={true}
                 leftContent={
                   <Ionicons
                     name="lock-closed"

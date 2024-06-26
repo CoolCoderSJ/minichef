@@ -138,7 +138,6 @@ export default App = () => {
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           padding: 5,
-          height: 60,
           backgroundColor: "#1a1820",
           border: "none",
           borderTopLeftRadius: 12,
