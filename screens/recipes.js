@@ -88,7 +88,7 @@ function Recipes() {
   });
 
 
-  const updateData = () => {
+  const updateData = async () => {
     console.log("start")
 
     db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
@@ -111,10 +111,18 @@ function Recipes() {
           recipeId: result.documents[i]['$id']
         })
       };
+  }).then(() => {
+    forceUpdate()
   })
 
   console.log("recipes", recipes)
+
+  forceUpdate()
   };
+
+  React.useEffect(() => {
+    updateData();
+  }, [])
 
   React.useEffect(() => {
     Toast.show({
@@ -123,7 +131,10 @@ function Recipes() {
     })
 
     const refreshData = navigation.addListener('focus', () => {
-      updateData();
+      updateData().then(() => {
+        Toast.hide()
+        forceUpdate()
+      })
     })
     return refreshData;
   }, [navigation]);

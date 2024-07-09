@@ -95,7 +95,7 @@ let sliderData = [
         },
     ],
   ]
-
+let stage = 1;
 let userId
 get("login").then(res => userId = res)
 
@@ -115,6 +115,8 @@ export default function CreateRecipe () {
 
 
   React.useEffect(() => {
+    stage = 1;
+
     db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
         console.log("ingredients", result)
         let mealDB = []
@@ -328,6 +330,9 @@ export default function CreateRecipe () {
                     />
                 </View>
 
+                {stage == 1 &&
+                <>
+
                 <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
                     <View style={{ marginBottom: 20 }}>
@@ -353,15 +358,26 @@ export default function CreateRecipe () {
                 </SectionContent>
                 </Section>
 
+                <Button
+                style={{ marginVertical: 10, marginHorizontal: 20 }}
+                leftContent={
+                    <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
+                }
+                text="Next"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => { stage = 2; forceUpdate(); }}
+                />
+
+                </>
+                }
+
+                {stage == 2 &&
+                <>
                 {fields.map((field, idx) => {
                 return (
                     <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
-                        <View style={{
-                        flexDirection: "row", gap: 12, alignItems: "center", justifyContent: "space-between" 
-                        }}>
-                        <View style={{ width: "85%" }}>
-
                             <View>
                             <Autocomplete 
                             data={filterList} 
@@ -394,12 +410,13 @@ export default function CreateRecipe () {
                                 }}
                                 defaultValue={String(field.serving_amt).replace("undefined", "")}
                                 keyboardType='numeric'
+                                style={{ height: 50 }}
                                 />
                             </View>
 
-                            <View style={{ marginVertical: 20, flex: 1 }}>
+                            <View style={{ flex: 1 }}>
                             <Button 
-                                text={field.serving_unit ? field.serving_unit : "Select a unit"}
+                                text={field.serving_unit ? field.serving_unit : "Unit"}
                                 status="primary"
                                 outline={true}
                                 type="TouchableOpacity"
@@ -407,22 +424,22 @@ export default function CreateRecipe () {
                                     unitBeingEdited = idx
                                     setSliderVisible(true)
                                 }}
+                                style={{ height: 50 }}
                             />
                             </View>
-                            </View>
-                            </View>
 
-                            <View style={{ marginBottom: 20 }}>
+                            <View>
                             <Button
-                                text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
+                                text={<Ionicons name="trash-outline" size={20} color={themeColor.danger} />}
                                 outline={true}
                                 status="danger"
                                 type="TouchableOpacity"
                                 onPress={() => { handleRemoveIng(idx) }}
-                                style={{ width: 50, height: 115 }}
+                                style={{ height: 50 }}
                             />
                             </View>
-                        </View>
+
+                            </View>
                     </SectionContent>
                     </Section>
                 );
@@ -439,7 +456,37 @@ export default function CreateRecipe () {
                 onPress={handleAddIng}
                 />
 
+                <View style={{ marginTop: 50, flexDirection: "row", marginHorizontal: 20, gap: 20 }}>
+                    <Button
+                        style={{ marginVertical: 10, flex: 1 }}
+                        leftContent={
+                            <Ionicons name="arrow-back" size={20} color={themeColor.primary} />
+                        }
+                        text="Back"
+                        status="primary"
+                        outline={true}
+                        type="TouchableOpacity"
+                        onPress={() => { stage = 1; forceUpdate(); }}
+                    />
 
+                    <Button
+                        style={{ marginVertical: 10, flex: 1 }}
+                        leftContent={
+                            <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
+                        }
+                        text="Next"
+                        status="primary"
+                        type="TouchableOpacity"
+                        onPress={() => { stage = 3; forceUpdate(); }}
+                    />
+
+                </View>
+                </>
+                }
+
+
+                {stage == 3 &&
+                <>
                 {steps.map((step, idx) => {
                 return (
                     <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
@@ -461,7 +508,7 @@ export default function CreateRecipe () {
 
                         <View style={{ marginVertical: 10 }}>
                         <Button
-                            text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
+                            text={<Ionicons name="trash-outline" size={20} color={themeColor.danger} />}
                             status="danger"
                             type="TouchableOpacity"
                             onPress={() => { handleRemoveStep(idx) }}
@@ -486,6 +533,37 @@ export default function CreateRecipe () {
                 type="TouchableOpacity"
                 onPress={handleAddStep}
                 />
+                
+                <View style={{ marginTop: 50, flexDirection: "row", marginHorizontal: 20, gap: 20 }}>
+                    <Button
+                        style={{ marginVertical: 10, flex: 1 }}
+                        leftContent={
+                            <Ionicons name="arrow-back" size={20} color={themeColor.primary} />
+                        }
+                        text="Back"
+                        status="primary"
+                        outline={true}
+                        type="TouchableOpacity"
+                        onPress={() => { stage = 2; forceUpdate(); }}
+                    />
+
+                    <Button
+                        style={{ marginVertical: 10, flex: 1 }}
+                        leftContent={
+                            <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
+                        }
+                        text="Finish"
+                        status="primary"
+                        type="TouchableOpacity"
+                        onPress={() => {
+                            save().then(() => {
+                                navigation.goBack()
+                            })
+                        }}
+                    />
+                </View>
+                </>
+                }
 
             </View>
         </ScrollView>
