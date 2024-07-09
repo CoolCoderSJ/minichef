@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, BackHandler } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, Image } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Button, Layout, Section, SectionContent, Text,
@@ -10,7 +10,7 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
+import { Client, Databases, Query, Storage } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
 
 import { createStackNavigator } from '@react-navigation/stack';
@@ -20,7 +20,7 @@ const client = new Client()
     .setProject('minichef'); // Your project ID
 
 const db = new Databases(client);
-const functions = new Functions(client);
+const storage = new Storage(client);
 
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
@@ -50,7 +50,8 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
             ing: ing,
             steps: result.documents[i].steps,
             serving: result.documents[i].servings,
-            recipeId: result.documents[i]['$id']
+            recipeId: result.documents[i]['$id'],
+            imageId: result.documents[i].imageId
           })
           filterAllowed.push(i);
         };
@@ -108,7 +109,8 @@ function Recipes() {
           ing: ing,
           steps: result.documents[i].steps,
           serving: result.documents[i].servings,
-          recipeId: result.documents[i]['$id']
+          recipeId: result.documents[i]['$id'],
+          imageId: result.documents[i].imageId
         })
       };
   }).then(() => {
@@ -131,6 +133,7 @@ function Recipes() {
     })
 
     const refreshData = navigation.addListener('focus', () => {
+      console.log("REFRESHING")
       updateData().then(() => {
         Toast.hide()
         forceUpdate()
@@ -203,14 +206,38 @@ function Recipes() {
                     {filterAllowed.includes(idx) &&
                       <View>
                         <TouchableOpacity onPress={() => navigation.navigate("View Recipe", { idx })}>
-                          <View style={styles.listItem}>
-                            <Text fontWeight="medium">{recipe.name}</Text>
-                            <Ionicons
-                              name="chevron-forward"
-                              size={20}
-                              color={isDarkmode ? themeColor.white : themeColor.black}
-                            />
-                          </View>
+                        <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
+                          <SectionContent>
+                          {recipe &&
+                            <>
+                              <Image source={{
+                                uri: recipe.imageId ? storage.getFileView("images", recipe.imageId).toString() : "https://sharex.shuchir.dev/u/YIQCWq.png"
+                              }}
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                right: 0,
+                              }}
+                              />
+
+                              <View style={{
+                                backgroundColor: "rgba(0,0,0,0.3)",
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                right: 0
+                              }}></View>
+                            </>
+                            }
+                            
+                            <View style={{ marginBottom: 20 }}>
+                              <Text fontWeight="medium" style={{ fontSize: 35, marginVertical: 12, textAlign: "center", textTransform: "capitalize" }}>{recipe.name}</Text>
+                            </View>
+                          </SectionContent>
+                        </Section>
                         </TouchableOpacity>
                       </View>
                     }

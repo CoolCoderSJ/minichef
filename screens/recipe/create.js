@@ -10,7 +10,7 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
+import { Client, Databases, Query, Permission, Role, ID, Storage } from "react-native-appwrite";
 import Autocomplete from '../../components/autocomplete';
 import SlidePicker from "react-native-slidepicker";
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -20,6 +20,7 @@ const client = new Client()
     .setProject('minichef'); // Your project ID
 
 const db = new Databases(client);
+const storage = new Storage(client);
 
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
@@ -224,6 +225,7 @@ export default function CreateRecipe () {
     Toast.show({
       type: 'info',
       text1: 'Saving...',
+      autoHide: false
     });
 
     updateIngredients()
@@ -242,8 +244,7 @@ export default function CreateRecipe () {
     serving_units.push(recipe.ing[j].serving_unit)
     }
 
-    try {
-    await db.createDocument("data", "recipes", recipe.recipeId, {
+    let data = {
         uid: userId,
         ingredients: ingredients,
         serving_units: serving_units,
@@ -251,7 +252,27 @@ export default function CreateRecipe () {
         steps: recipe.steps,
         name: recipe.name,
         servings: Number(recipe.serving)
-    }, [
+    }
+
+    if (recipe.image != "") {
+        storage.createFile("images", ID.unique(), recipe.image, [
+            Permission.read(Role.user(userId)),
+            Permission.write(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+        ])
+        .then(file => {
+            console.log(file)
+            data['imageId'] = file.$id
+        })
+        .catch(err => console.error(err))
+    }
+
+    while (recipe.image != "" && data['imageId'] == undefined) {
+        await new Promise(r => setTimeout(r, 500));
+    }
+    try {
+    await db.createDocument("data", "recipes", recipe.recipeId, data, [
         Permission.read(Role.user(userId)),
         Permission.write(Role.user(userId)),
         Permission.update(Role.user(userId)),
@@ -264,21 +285,19 @@ export default function CreateRecipe () {
     });
     }
 
-    catch {
-    await db.updateDocument("data", "recipes", recipe.recipeId, {
-        uid: userId,
-        ingredients: ingredients,
-        serving_units: serving_units,
-        serving_amt: serving_amt,
-        steps: recipe.steps,
-        name: recipe.name,
-        servings: Number(recipe.serving)
-    }, [
-        Permission.read(Role.user(userId)),
-        Permission.write(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-    ]);
+    catch (err) {
+        console.warn(err)
+        try {
+            await db.updateDocument("data", "recipes", recipe.recipeId, data, [
+                Permission.read(Role.user(userId)),
+                Permission.write(Role.user(userId)),
+                Permission.update(Role.user(userId)),
+                Permission.delete(Role.user(userId)),
+            ]);
+        }
+        catch (err) {
+            console.error(err)
+        }
 
     Toast.show({
         type: 'success',
@@ -363,7 +382,7 @@ export default function CreateRecipe () {
                 <Button
                 style={{ marginTop: 10, marginHorizontal: 20 }}
                 leftContent={
-                    <Ionicons name="image" size={20} color={themeColor.primary} />
+                    <Ionicons name="image" size={20} color={themeColor.white} />
                 }
                 text="Upload Image"
                 status="primary"
@@ -377,8 +396,9 @@ export default function CreateRecipe () {
                             console.log('ImagePicker Error: ', response.errorMessage);
                         } 
                         else {
-                            recipe['image'] = response.assets[0].base64;
-                            recipe['imageName'] = response.assets[0].fileName;
+                            recipe.image = response.assets[0]
+                            recipe.image.size = recipe.image.fileSize
+                            recipe.image.name = recipe.image.fileName
                             forceUpdate();
                         }
                     })
@@ -387,11 +407,11 @@ export default function CreateRecipe () {
 
                 <View style={{ flexDirection: "row", marginHorizontal: 20, marginTop: 15, alignItems: "center", justifyContent: "space-between" }}>
                     <Text style={{ color: themeColor.primary300 }}>
-                        {recipe['imageName'] ? recipe['imageName'] + " selected" : "No image selected"}
+                        {recipe.image.name ? recipe.image.name + " selected" : "No image selected"}
                     </Text>
 
-                    {recipe['image'] != "" &&
-                        <TouchableOpacity onPress={() => { recipe['image'] = ""; recipe['imageName'] = ""; forceUpdate() }}>
+                    {recipe.image != "" &&
+                        <TouchableOpacity onPress={() => { recipe.image = ""; recipe.image.name = ""; forceUpdate() }}>
                             <Text style={{ color: themeColor.danger }}>Remove Image</Text>
                         </TouchableOpacity>
                     }

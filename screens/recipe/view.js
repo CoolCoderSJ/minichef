@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, BackHandler } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, BackHandler, Image } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Button, Layout, Section, SectionContent, Text,
@@ -10,7 +10,7 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
+import { Client, Databases, Query, Storage } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
 
 import Dialog from "react-native-dialog";
@@ -25,6 +25,7 @@ const client = new Client()
     .setProject('minichef'); // Your project ID
 
 const db = new Databases(client);
+const storage = new Storage(client);
 
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
@@ -56,7 +57,8 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
             ing: ing,
             steps: result.documents[i].steps,
             serving: result.documents[i].servings,
-            recipeId: result.documents[i]['$id']
+            recipeId: result.documents[i]['$id'],
+            imageId: result.documents[i].imageId
           })
           filterAllowed.push(i);
         };
@@ -95,7 +97,8 @@ export default function ViewRecipe ({ navigation, route }) {
                 ing: ing,
                 steps: result.documents[i].steps,
                 serving: result.documents[i].servings,
-                recipeId: result.documents[i]['$id']
+                recipeId: result.documents[i]['$id'],
+                imageId: result.documents[i].imageId
               })
               filterAllowed.push(i);
             };
@@ -107,8 +110,15 @@ export default function ViewRecipe ({ navigation, route }) {
         ingl.push(currentRecipe['ing'][i]['ing'])
         }
         setIngList(ingl)
+
+        if (currentRecipe.imageId) {
+          console.log(currentRecipe.imageId)
+          const file = storage.getFileView("images", currentRecipe.imageId)
+          currentRecipe.imageUrl = file
+          forceUpdate()
+        }
     })
-    }, [recipeId]);
+    }, []);
 
   function handleCancel () {
     setDeleteVisible(false);
@@ -137,7 +147,8 @@ export default function ViewRecipe ({ navigation, route }) {
           ing: ing,
           steps: result.documents[i].steps,
           serving: result.documents[i].servings,
-          recipeId: result.documents[i]['$id']
+          recipeId: result.documents[i]['$id'],
+          imageId: result.documents[i].imageId
         })
       };
   })
@@ -243,6 +254,31 @@ export default function ViewRecipe ({ navigation, route }) {
 
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
+                {currentRecipe &&
+                  <>
+                    <Image source={{
+                      uri: currentRecipe.imageUrl ? currentRecipe.imageUrl.toString() : "https://sharex.shuchir.dev/u/YIQCWq.png"
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                    }}
+                    />
+
+                    <View style={{
+                      backgroundColor: "rgba(0,0,0,0.3)",
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0
+                    }}></View>
+                  </>
+                  }
+                  
                   <View style={{ marginBottom: 20 }}>
                     <Text fontWeight="medium" style={{ fontSize: 35, marginVertical: 15, marginBottom: 30, textAlign: "center", textTransform: "capitalize" }}>{recipes[recipeId] ? recipes[recipeId]['name'] : "Loading..."}</Text>
                   </View>

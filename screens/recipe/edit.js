@@ -10,15 +10,17 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
+import { Client, Databases, Query, Permission, Role, Storage, ID } from "react-native-appwrite";
 import Autocomplete from '../../components/autocomplete';
 import SlidePicker from "react-native-slidepicker";
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
     .setProject('minichef'); // Your project ID
 
 const db = new Databases(client);
+const storage = new Storage(client);
 
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
@@ -112,7 +114,8 @@ get("login").then(res => userId = res)
                 ing: ing,
                 steps: result.documents[i].steps,
                 serving: result.documents[i].servings,
-                recipeId: result.documents[i]['$id']
+                recipeId: result.documents[i]['$id'],
+                imageId: result.documents[i].imageId
               })
             };
           }
@@ -161,7 +164,8 @@ export default function EditRecipe ({ navigation, route }) {
                 ing: ing,
                 steps: result.documents[i].steps,
                 serving: result.documents[i].servings,
-                recipeId: result.documents[i]['$id']
+                recipeId: result.documents[i]['$id'],
+                imageId: result.documents[i].imageId
               })
             };
           }
@@ -171,6 +175,14 @@ export default function EditRecipe ({ navigation, route }) {
         recipe = recipes[route.params.idx]
         setFields(recipe['ing']);
         setSteps(recipe['steps']);
+
+        if (recipe.imageId) {
+            storage.getFile("images", recipe.imageId).then((res) => {
+                console.log(res)
+                recipe.imageName = res.name
+                forceUpdate()
+            })
+        }
     })
 
   }, [])
@@ -266,6 +278,7 @@ export default function EditRecipe ({ navigation, route }) {
     Toast.show({
       type: 'info',
       text1: 'Saving...',
+      autoHide: false
     });
 
     updateIngredients()
@@ -284,8 +297,7 @@ export default function EditRecipe ({ navigation, route }) {
     serving_units.push(recipe.ing[j].serving_unit)
     }
 
-    try {
-    await db.createDocument("data", "recipes", recipe.recipeId, {
+    let data = {
         uid: userId,
         ingredients: ingredients,
         serving_units: serving_units,
@@ -293,7 +305,32 @@ export default function EditRecipe ({ navigation, route }) {
         steps: recipe.steps,
         name: recipe.name,
         servings: Number(recipe.serving)
-    }, [
+    }
+
+    if (recipe.image) {
+        storage.createFile("images", ID.unique(), recipe.image, [
+            Permission.read(Role.user(userId)),
+            Permission.write(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+        ])
+        .then(file => {
+            console.log(file)
+            data['imageId'] = file.$id
+        })
+        .catch(err => console.error(err))
+    }
+    if (!recipe.imageName) {
+        console.log("RESETTING IMAGE ID")
+        data['imageId'] = ""
+    }
+
+    while (recipe.image != "" && data['imageId'] == undefined) {
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    try {
+    await db.createDocument("data", "recipes", recipe.recipeId, data, [
         Permission.read(Role.user(userId)),
         Permission.write(Role.user(userId)),
         Permission.update(Role.user(userId)),
@@ -307,15 +344,7 @@ export default function EditRecipe ({ navigation, route }) {
     }
 
     catch {
-    await db.updateDocument("data", "recipes", recipe.recipeId, {
-        uid: userId,
-        ingredients: ingredients,
-        serving_units: serving_units,
-        serving_amt: serving_amt,
-        steps: recipe.steps,
-        name: recipe.name,
-        servings: Number(recipe.serving)
-    }, [
+    await db.updateDocument("data", "recipes", recipe.recipeId, data, [
         Permission.read(Role.user(userId)),
         Permission.write(Role.user(userId)),
         Permission.update(Role.user(userId)),
@@ -404,7 +433,46 @@ export default function EditRecipe ({ navigation, route }) {
                 </Section>
 
                 <Button
-                style={{ marginVertical: 10, marginHorizontal: 20 }}
+                style={{ marginTop: 10, marginHorizontal: 20 }}
+                leftContent={
+                    <Ionicons name="image" size={20} color={themeColor.white} />
+                }
+                text="Upload Image"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => { 
+                    launchImageLibrary({ mediaType: 'photo', includeBase64: true }, (response) => {
+                        if (response.didCancel) {
+                            console.log('User cancelled image picker');
+                        } 
+                        else if (response.errorMessage) {
+                            console.log('ImagePicker Error: ', response.errorMessage);
+                        } 
+                        else {
+                            recipe.image = response.assets[0]
+                            recipe.image.size = recipe.image.fileSize
+                            recipe.image.name = recipe.image.fileName
+                            recipe.imageName = recipe.image.name
+                            forceUpdate();
+                        }
+                    })
+                 }}
+                />
+
+                <View style={{ flexDirection: "row", marginHorizontal: 20, marginTop: 15, alignItems: "center", justifyContent: "space-between" }}>
+                    <Text style={{ color: themeColor.primary300 }}>
+                        {recipe.imageName ? recipe.imageName + " selected" : "No image selected"}
+                    </Text>
+
+                    {recipe.imageName &&
+                        <TouchableOpacity onPress={() => { recipe.image = ""; recipe.imageName = ""; forceUpdate() }}>
+                            <Text style={{ color: themeColor.danger }}>Remove Image</Text>
+                        </TouchableOpacity>
+                    }
+                </View>
+
+                <Button
+                style={{ marginTop: 50, marginHorizontal: 20 }}
                 leftContent={
                     <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
                 }
