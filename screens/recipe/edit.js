@@ -24,30 +24,43 @@ const get = async (key) => { try { const value = await AsyncStorage.getItem(key)
 console.disableYellowBox = true;
 
 
-let recipe = {
-    name: "",
-    serving: "",
-    ing: [],
-    steps: [],
-    recipeId: ID.unique()
-};
+let recipe = {};
+let recipes = [];
 
 let userId
 get("login").then(res => userId = res)
+.then(() => {
+    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+        if (result.total > 0) {
+            for (let i = 0; i < result.documents.length; i++) {
+              let ing = []
+              for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                ing.push({
+                  ing: result.documents[i].ingredients[j],
+                  serving_amt: result.documents[i].serving_amt[j],
+                  serving_unit: result.documents[i].serving_units[j]
+                });
+              }
+              recipes.push({
+                name: result.documents[i].name,
+                ing: ing,
+                steps: result.documents[i].steps,
+                serving: result.documents[i].servings,
+                recipeId: result.documents[i]['$id']
+              })
+            };
+          }
+    })
+})
 
-
-export default function CreateRecipe () {
+export default function EditRecipe ({ navigation, route }) {
   const { isDarkmode, setTheme } = useTheme();
-  const navigation = useNavigation();
 
   // Initialize the state
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-  const [mealsList, setMealsList] = React.useState([]);
   const [fields, setFields] = React.useState([{}]);
   const [steps, setSteps] = React.useState([{}]);
   const [filterList, setFilterList] = React.useState([{}]);
-  const { height: screenHeight } = Dimensions.get('window');
-
 
   React.useEffect(() => {
     db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
@@ -63,7 +76,37 @@ export default function CreateRecipe () {
         }
         setFilterList(filter);
       })
+    
+    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+        if (result.total > 0) {
+            for (let i = 0; i < result.documents.length; i++) {
+              let ing = []
+              for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                ing.push({
+                  ing: result.documents[i].ingredients[j],
+                  serving_amt: result.documents[i].serving_amt[j],
+                  serving_unit: result.documents[i].serving_units[j]
+                });
+              }
+              recipes.push({
+                name: result.documents[i].name,
+                ing: ing,
+                steps: result.documents[i].steps,
+                serving: result.documents[i].servings,
+                recipeId: result.documents[i]['$id']
+              })
+            };
+          }
+    })
+    .then(() => {
+        console.log("IDX", route.params.idx)
+        recipe = recipes[route.params.idx]
+        setFields(recipe['ing']);
+        setSteps(recipe['steps']);
+    })
+
   }, [])
+
 
   function handleChange(i, type, value) {
 
@@ -235,7 +278,7 @@ export default function CreateRecipe () {
             />
           }
           leftAction={() => navigation.goBack()}
-          middleContent="Create Recipe"
+          middleContent="Edit Recipe"
         />
 
         <ScrollView 
@@ -250,18 +293,20 @@ export default function CreateRecipe () {
 
             <View>
 
-                <View style={{ paddingBottom: 20 }}>
-                    <Button
-                    style={{ marginVertical: 10, marginHorizontal: 20 }}
-                    leftContent={
-                        <Ionicons name="save-outline" size={20} color={themeColor.white} />
-                    }
-                    text="Save"
-                    status='primary'
-                    type="TouchableOpacity"
-                    onPress={save}
-                    />
-                </View>
+                {recipe && 
+                    <View style={{ paddingBottom: 20 }}>
+                        <Button
+                        style={{ marginVertical: 10, marginHorizontal: 20 }}
+                        leftContent={
+                            <Ionicons name="save-outline" size={20} color={themeColor.white} />
+                        }
+                        text="Save"
+                        status='primary'
+                        type="TouchableOpacity"
+                        onPress={save}
+                        />
+                    </View>
+                }
 
                 <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
                 <SectionContent>
@@ -395,7 +440,7 @@ export default function CreateRecipe () {
                         />
                         </View>
 
-                        <View style={{ marginVertical: 10, width: 50, height: 50 }}>
+                        <View style={{ marginVertical: 10 }}>
                         <Button
                             text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
                             status="danger"
