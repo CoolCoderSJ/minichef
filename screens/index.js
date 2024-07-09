@@ -142,6 +142,7 @@ export default App = () => {
           border: "none",
           borderTopLeftRadius: 12,
           borderTopRightRadius: 12,
+          minHeight: 60
         },
         tabBarActiveTintColor: themeColor.primary300,
         tabBarInactiveTintColor: themeColor.gray300,

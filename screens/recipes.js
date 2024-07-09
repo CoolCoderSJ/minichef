@@ -21,6 +21,8 @@ import { Fraction } from "fractional";
 import { SwipeablePanel } from 'rn-swipeable-panel';
 import RNJsxParser from 'react-native-jsx-parser';
 
+import { createStackNavigator } from '@react-navigation/stack';
+
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
     .setProject('minichef'); // Your project ID
@@ -71,7 +73,7 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
 })
 
 
-export default function Recipes() {
+function Recipes() {
   const { isDarkmode, setTheme } = useTheme();
   const navigation = useNavigation();
 
@@ -494,13 +496,7 @@ export default function Recipes() {
                   <View>
                     {filterAllowed.includes(idx) &&
                       <View>
-                        <TouchableOpacity onPress={() => { recipeId = idx; setRIDTD(idx); currentRecipe = _.cloneDeep(recipes[recipeId]); setServings(currentRecipe.serving); 
-                          let ingl = []
-                          for (let i=0; i < currentRecipe['ing'].length; i++) {
-                            ingl.push(currentRecipe['ing'][i]['ing'])
-                          }
-                          setIngList(ingl)
-                          setshowRecipePage(true) }}>
+                        <TouchableOpacity onPress={() => navigation.navigate("View Recipe", { idx })}>
                           <View style={styles.listItem}>
                             <Text fontWeight="medium">{recipe.name}</Text>
                             <Ionicons
@@ -524,11 +520,7 @@ export default function Recipes() {
                 text="Add New Recipe"
                 status="primary"
                 type="TouchableOpacity"
-                onPress={() => {
-                  recipeId = recipes.length;
-                  newFromHome = true;
-                  fetchMeals();
-                }}
+                onPress={() => navigation.navigate("Create Recipe")}
               />
 
                 <View style={{ flexDirection: "row", height: "fit-content", marginTop: 25, gap: 24 }}>
@@ -613,186 +605,6 @@ export default function Recipes() {
             </View>
           }
 
-
-
-          {!showMealEditor && showRecipePage && !showWalkthrough &&
-            <View>
-              <Dialog.Container visible={deleteVisible}>
-                <Dialog.Title>Delete Recipe</Dialog.Title>
-                <Dialog.Description>
-                  Are you sure you wnat to delete this recipe? You cannot undo this action.
-                </Dialog.Description>
-                <Dialog.Button label="Cancel" onPress={handleCancel} />
-                <Dialog.Button label="Delete" onPress={() => {
-                  setDeleteVisible(false)
-                  Toast.show({
-                    type: "info",
-                    text1: "Deleting..."
-                  })
-                   db.deleteDocument("data", "recipes", recipes[recipeIDToDel].recipeId).then(() => {
-                    recipes.splice(recipeIDToDel, 1)
-                   setshowRecipePage(false)
-                   setShowMealEditor(false)
-                   forceUpdate()
-                   updateData()
-                   Toast.show({
-                    type: "success",
-                    text1: "Deleted!"
-                   })
-                   })
-                }} />
-              </Dialog.Container>
-
-              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
-                <SectionContent>
-                  <View style={{ marginBottom: 20 }}>
-                    <Text fontWeight="medium" style={{ fontSize: 35, marginVertical: 15, marginBottom: 30, textAlign: "center", textTransform: "capitalize" }}>{recipes[recipeId]['name']}</Text>
-                  </View>
-                </SectionContent>
-              </Section>
-
-              <View style={{
-                marginHorizontal: 20, marginTop: 20,
-                display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 0
-              }}>
-
-                <View style={{
-                  display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 20,
-                  width: 75, gap: 8, alignSelf: "flex-start", marginLeft: 40
-                }}>
-                <Text style={{ fontSize: 22, textAlign: "center", marginRight: 15 }}><Ionicons name="people-outline" size={40} color={themeColor.white} /></Text>
-                <TextInput
-                  onChangeText={(value) => {
-                    
-                    setServings(value)
-
-                    for (let i=0; i < recipes[recipeId]['ing'].length; i++) {
-                      currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(value)
-                    }
-                    forceUpdate()
-                  }}
-                  defaultValue={String(recipes[recipeId]['serving'])}
-                  placeholder="Servings"
-                  keyboardType='numeric'
-                  style={{
-                    width: "auto"
-                  }}
-                />
-                </View>
-
-
-                <View style={{ marginBottom: 27, height: 50, marginLeft: 33, width: 200 }}>
-                  <Button
-                    leftContent={
-                      <Ionicons name="play-outline" size={20} color={themeColor.white} />
-                    }
-                    text="Start"
-                    status="primary"
-                    type="TouchableOpacity"
-                    onPress={() => { currentIndex = 0; setshowRecipePage(false); setShowMealEditor(false); setShowWalkthrough(true) }}
-                  />
-                </View>
-
-
-                <MenuView
-                style={{ width: "auto", height: "auto", marginBottom: 30 }}
-                  title="More Actions"
-                  onPressAction={({ nativeEvent }) => {
-                    if (nativeEvent.event == "edit") { newFromHome = false; setshowRecipePage(false); fetchMeals(); setShowMealEditor(true)}
-                    if (nativeEvent.event == "delete") {setDeleteVisible(true); setshowRecipePage(true)}
-                  }}
-                  actions={[
-                    {
-                      id: 'edit',
-                      title: 'Edit',
-                      titleColor: themeColor.primary,
-                      image: Platform.select({
-                        ios: 'edit',
-                        android: 'ic_menu_edit',
-                      }),
-                      imageColor: themeColor.primary,
-                    },
-                    {
-                      id: 'delete',
-                      title: 'Delete Recipe',
-                      attributes: {
-                        destructive: true,
-                      },
-                      image: Platform.select({
-                        ios: 'trash',
-                        android: 'ic_menu_delete',
-                      }),
-                    }, 
-                  ]}
-                  shouldOpenOnLongPress={false}
-                >
-                  <View style={{ padding: 5, backgroundColor: "#262834", borderRadius: 8, width: "auto" }}>
-                    <Ionicons name="menu" size={40} color={themeColor.white} />
-                  </View>
-                </MenuView>
-              </View>
-
-              <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 5, textAlign: "center" }}>Ingredients</Text>
-
-              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
-                <SectionContent>
-                  <View style={{ marginBottom: 20 }}>
-                    {currentRecipe['ing'].map((ing, idx) => {
-                      return (
-                        <View style={{ marginHorizontal: 20, marginTop: 18 }}>
-                          <Text style={{ fontSize: 18.5 }}>{ing.serving_amt > 0 && <Text style={{ color: themeColor.primary200, fontSize: 18.5 }}>{(new Fraction(ing.serving_amt)).toString()} {ing.serving_unit}</Text>} {ing.ing}</Text>
-                        </View>
-                      )
-                    })}
-                  </View>
-                </SectionContent>
-              </Section>
-
-              <Text style={{ fontSize: 25, fontWeight: "bold", marginHorizontal: 30, marginTop: 40, marginBottom: 18, textAlign: "center" }}>Steps</Text>
-              {recipes[recipeId]['steps'].map((step, idx) => {
-                let wordArr = step.split(' ');
-                let text = [];
-                wordArr.forEach(function(el) {
-                  for (let i=0; i < ingList.length; i++) {
-                    if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice", "and", "I", "at", "an"].includes(el.toLowerCase())) {
-                      el = `<Text style={{ color: "#adc8ff" }} onPress={() => handlePress('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}')}>${el}</Text>`;
-                      el = el
-                    } 
-                  }
-                  text.push(el);
-                });
-                text = "<Text>" + text.join('&nbsp;') + "</Text>";
-
-                return (
-                    <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginVertical: 7 }}>
-                      <SectionContent>
-                          <View style={{ marginBottom: 10 }}>
-                              <Text style={{ fontSize: 17 }}>{idx + 1}. 
-                                  <RNJsxParser renderInWrapper={false} bindings={{ 
-                                    handlePress: (textToRender) => {
-                                      Toast.show({
-                                        type: 'info',
-                                        text1: textToRender,
-                                      })
-                                    } 
-                                    }} 
-                                    blacklistedAttrs={[]} 
-                                    showWarnings={true} 
-                                    components={{ Text }} 
-                                    jsx={text} />
-                              </Text>
-                          </View>
-                      </SectionContent>
-                    </Section>
-                )
-              })}
-              <View style={{ marginBottom: 20, height: 20 }}></View>
-
-            </View>
-          }
-
-
-
           {!showMealEditor && !showRecipePage && showWalkthrough &&
             <View style={{ flex: 1 }}>
               <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
@@ -826,27 +638,29 @@ export default function Recipes() {
                 </SectionContent>
               </Section>
 
-              <Button
-                  style={{ marginVertical: 5, marginHorizontal: 20 }}
-                  leftContent={
-                    <Ionicons name="chevron-back" size={20} color={themeColor.white} />
-                  }
-                  text="Back"
-                  color="black100"
-                  type="TouchableOpacity"
-                  onPress={() => { setShowWalkthrough(false); setshowRecipePage(true); setShowMealEditor(false) }}
-                />
-
+              <View style={{ gap: 4, flexDirection: "row", marginVertical: 20, height: "auto" }}>
                 <Button
-                  style={{ marginVertical: 5, marginHorizontal: 20 }}
-                  rightContent={
-                    <Ionicons name="chevron-forward" size={20} color={themeColor.white} />
-                  }
-                  text="Next"
-                  status="primary"
-                  type="TouchableOpacity"
-                  onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
-                />
+                    style={{ marginVertical: 5, marginHorizontal: 20, flex: 1, width: "auto" }}
+                    leftContent={
+                      <Ionicons name="chevron-back" size={20} color={themeColor.white} />
+                    }
+                    text="Back"
+                    color="black100"
+                    type="TouchableOpacity"
+                    onPress={() => { setShowWalkthrough(false); setshowRecipePage(true); setShowMealEditor(false) }}
+                  />
+
+                  <Button
+                    style={{ marginVertical: 5, marginHorizontal: 20, flex: 1, width: "auto" }}
+                    rightContent={
+                      <Ionicons name="chevron-forward" size={20} color={themeColor.white} />
+                    }
+                    text="Next"
+                    status="primary"
+                    type="TouchableOpacity"
+                    onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
+                  />
+                </View>
               </>
               }
 
@@ -883,30 +697,32 @@ export default function Recipes() {
                   </View>
                 </SectionContent>
                 </Section>
+                
+                <View style={{ gap: 4, flexDirection: "row", marginVertical: 20, height: "auto" }}>
+                  <Button
+                    style={{ marginVertical: 5, marginHorizontal: 20, flex: 1, width: "auto" }}
+                    leftContent={
+                      <Ionicons name="chevron-back" size={20} color={themeColor.white} />
+                    }
+                    text="Back"
+                    color="black100"
+                    type="TouchableOpacity"
+                    onPress={() => { currentIndex -= 1; if (currentIndex > 0) updateJSX(currentIndex - 1); forceUpdate() }}
+                  />
 
-                <Button
-                  style={{ marginTop: 20, marginVertical: 5, marginHorizontal: 20 }}
-                  leftContent={
-                    <Ionicons name="chevron-back" size={20} color={themeColor.white} />
+                  {currentIndex < currentRecipe.steps.length &&
+                  <Button
+                    style={{ marginVertical: 5, marginHorizontal: 20, flex: 1, width: "auto" }}
+                    rightContent={
+                      <Ionicons name="chevron-forward" size={20} color={themeColor.white} />
+                    }
+                    text="Next"
+                    status="primary"
+                    type="TouchableOpacity"
+                    onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
+                  />
                   }
-                  text="Back"
-                  color="black100"
-                  type="TouchableOpacity"
-                  onPress={() => { currentIndex -= 1; if (currentIndex > 0) updateJSX(currentIndex - 1); forceUpdate() }}
-                />
-
-                {currentIndex < currentRecipe.steps.length &&
-                <Button
-                  style={{ marginVertical: 5, marginHorizontal: 20 }}
-                  rightContent={
-                    <Ionicons name="chevron-forward" size={20} color={themeColor.white} />
-                  }
-                  text="Next"
-                  status="primary"
-                  type="TouchableOpacity"
-                  onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
-                />
-                }
+                </View>
 
                 <SwipeablePanel {...ingPanelProps} isActive={isPanelActive} style={{ backgroundColor: "#262834", paddingBottom: 20, flex: 1, flexGrow: 1, minHeight: screenHeight + 300, marginBottom: 50 }} scrollViewProps={{ flex: 1, flexGrow: 1 }} closeOnTouchOutside={true} noBar={true}>
                   <ScrollView contentContainerStyle={{ flexGrow: 1, minHeight: screenHeight }}>
@@ -925,213 +741,31 @@ export default function Recipes() {
             </View>
           }
 
-
-          {showMealEditor && !showRecipePage && !showWalkthrough &&
-            <View>
-
-              <View style={{ paddingBottom: 20 }}>
-                <Button style={{ marginHorizontal: 20, marginVertical: 10 }} status="primary" text="All Recipes" onPress={() => {
-                  updateData()
-                  for (let i = 0; i < recipes.length; i++) {
-                    if (recipes[i]['name'] == "") {
-                      console.log(i, recipes[i])
-                      recipes.splice(i, 1);
-                    }
-                  }
-
-                  setShowMealEditor(false)
-                }} />
-
-                  <Button
-                    style={{ marginVertical: 10, marginHorizontal: 20 }}
-                    leftContent={
-                      <Ionicons name="save-outline" size={20} color={themeColor.white} />
-                    }
-                    text="Save"
-                    color="#0b4276"
-                    type="TouchableOpacity"
-                    onPress={save}
-                  />
-              </View>
-
-              <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
-                <SectionContent>
-                  <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                      onChangeText={(value) => {
-                        recipes[recipeId]['name'] = value;
-                      }}
-                      defaultValue={recipes[recipeId]['name']}
-                      placeholder="Recipe Name"
-                    />
-                  </View>
-
-                  <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                      onChangeText={(value) => {
-                        recipes[recipeId]['serving'] = value;
-                      }}
-                      defaultValue={String(recipes[recipeId]['serving'])}
-                      placeholder="Servings"
-                      keyboardType='numeric'
-                    />
-                  </View>
-                </SectionContent>
-              </Section>
-
-              {fields.map((field, idx) => {
-                return (
-                  <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
-                    <SectionContent>
-                      <View style={{
-                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
-                      }}>
-                        <View style={{ width: "85%" }}>
-
-                          <View>
-                          <Autocomplete 
-                          data={filterList} 
-                          placeholder="Start typing to search ingredients..." 
-                          defaultValue={field.ing}
-                          onSelect={(item) => {
-                            if (item) {
-
-                              let mealObj = undefined;
-
-                              for (let i = 0; i < mealsList.length; i++) {
-                                if (mealsList[i] === item) {
-                                  mealObj = mealsList[i]
-                                  let fieldset = fields
-
-                                  fieldset[idx]['serving_amt'] = "1"
-                                  setFields(fieldset)
-                                }
-                              }
-
-                              if (!mealObj) {
-                                return
-                              }
-
-                              handleChange(idx, "ing", item);
-                            }
-                          }}
-
-                          onChangeText={e => {
-                            handleChange(idx, "ing", e)
-                          }}
-                          />
-                          </View>
-
-                          <View style={{ flexDirection: "row", gap: 8 }}> 
-
-                            <View style={{ marginVertical: 20, flex: 1 }}>
-                              <TextInput
-                                placeholder="Amount"
-                                onChangeText={e => {
-                                  handleChange(idx, "serving_amt", Number(e))
-                                }}
-                                defaultValue={String(field.serving_amt).replace("undefined", "")}
-                                keyboardType='numeric'
-                              />
-                            </View>
-
-                            <View style={{ marginVertical: 20, flex: 3 }}>
-                            <Autocomplete 
-                              data={["cups", "tbsp", "tsp", "g", "kg", "ml", "l", "oz", "lb", "pt", "qt", "gal", "fl oz", "pinch"]} 
-                              placeholder="Unit (i.e. cups, tbsp, etc.)" 
-                              defaultValue={field.serving_unit}
-                              onSelect={(item) => {
-                                handleChange(idx, "serving_unit", item);
-                              }}
-
-                              onChangeText={e => {
-                                handleChange(idx, "serving_unit", e)
-                              }}
-                              />
-                            </View>
-                          </View>
-                          </View>
-
-                          <View style={{ marginBottom: 20 }}>
-                            <Button
-                              text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
-                              outline={true}
-                              status="danger"
-                              type="TouchableOpacity"
-                              onPress={() => { handleRemoveIng(idx) }}
-                            />
-                          </View>
-                      </View>
-                    </SectionContent>
-                  </Section>
-                );
-              })}
-
-              <Button
-                style={{ marginVertical: 10, marginHorizontal: 20 }}
-                leftContent={
-                  <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
-                }
-                text="Add New Ingredient"
-                status="primary"
-                type="TouchableOpacity"
-                onPress={handleAddIng}
-              />
-
-
-              {steps.map((step, idx) => {
-                return (
-                  <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
-                    <SectionContent>
-
-                      <View style={{
-                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
-                      }}>
-
-                      <View style={{ marginVertical: 10, width: "85%" }}>
-                        <TextInput
-                          placeholder="Enter a step.."
-                          onChangeText={e => {
-                            handleChangeStep(idx, e)
-                          }}
-                          defaultValue={step}
-                        />
-                      </View>
-
-                      <View style={{ marginVertical: 10 }}>
-                        <Button
-                          text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
-                          status="danger"
-                          type="TouchableOpacity"
-                          onPress={() => { handleRemoveStep(idx) }}
-                          outline={true}
-                        />
-                      </View>
-                      </View>
-
-                    </SectionContent>
-                  </Section>
-                );
-              })}
-
-              <Button
-                style={{ marginVertical: 10, marginHorizontal: 20 }}
-                leftContent={
-                  <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
-                }
-                text="Add New Step"
-                status="primary"
-                type="TouchableOpacity"
-                onPress={handleAddStep}
-              />
-
-            </View>
-          }
-
         </ScrollView>
       </Layout>
       <Toast />
     </KeyboardAvoidingView>
 
+  );
+}
+
+const RecipeStack = createStackNavigator();
+
+import CreateRecipe from './recipe/create';
+import ViewRecipe from './recipe/view';
+
+export default function RMain() {
+  return (
+    <RecipeStack.Navigator
+      initialRouteName="AllRecipes"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <RecipeStack.Screen name="AllRecipes" component={Recipes} />
+      <RecipeStack.Screen name="Create Recipe" component={CreateRecipe} />
+      <RecipeStack.Screen name="View Recipe" component={ViewRecipe} />
+
+    </RecipeStack.Navigator>
   );
 }

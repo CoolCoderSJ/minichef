@@ -142,8 +142,8 @@ function Grocery () {
 
 const GroceryStack = createStackNavigator();
 
-import ViewGrocery from './view_grocery';
-import CreateGrocery from './create_grocery';
+import ViewGrocery from './grocery/view';
+import CreateGrocery from './grocery/create';
 
 export default function GMain() {
     return (

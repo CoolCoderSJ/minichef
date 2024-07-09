@@ -13,7 +13,7 @@ import {
 } from "react-native-rapi-ui";
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
 import Toast from 'react-native-toast-message';
-import Autocomplete from '../components/autocomplete';
+import Autocomplete from '../../components/autocomplete';
 import Modal from "react-native-modal";
 
 const client = new Client()
