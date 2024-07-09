@@ -12,6 +12,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
 import Autocomplete from '../../components/autocomplete';
+import SlidePicker from "react-native-slidepicker";
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -26,6 +27,70 @@ console.disableYellowBox = true;
 
 let recipe = {};
 let recipes = [];
+
+let unitBeingEdited = null;
+
+let sliderData = [
+    [
+      {
+        "label": "Tablespoon(s)",
+        "value": "tbsp"
+      },
+      {
+        "label": "Teaspoon(s)",
+        "value": "tsp"
+      },
+      {
+        "label": "Cups",
+        "value": "cups"
+      },
+        {
+            "label": "Gram(s)",
+            "value": "g"
+        },
+        {
+            "label": "Kilogram(s)",
+            "value": "kg"
+        },
+        {
+            "label": "Milliliter(s)",
+            "value": "ml"
+        },
+        {
+            "label": "Liter(s)",
+            "value": "l"
+        },
+        {
+            "label": "Ounce(s)",
+            "value": "oz"
+        },
+        {
+            "label": "Pound(s)",
+            "value": "lb"
+        },
+        {
+            "label": "Pint(s)",
+            "value": "pt"
+        },
+        {
+            "label": "Quart(s)",
+            "value": "qt"
+        },
+        {
+            "label": "Gallon(s)",
+            "value": "gal"
+        },
+        {
+            "label": "Fluid Ounce(s)",
+            "value": "fl oz"
+        },
+        {
+            "label": "Pinch",
+            "value": "pinch"
+        },
+    ],
+  ]
+
 
 let userId
 get("login").then(res => userId = res)
@@ -61,6 +126,7 @@ export default function EditRecipe ({ navigation, route }) {
   const [fields, setFields] = React.useState([{}]);
   const [steps, setSteps] = React.useState([{}]);
   const [filterList, setFilterList] = React.useState([{}]);
+  const [sliderVisible, setSliderVisible] = React.useState(false);
 
   React.useEffect(() => {
     db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
@@ -338,7 +404,7 @@ export default function EditRecipe ({ navigation, route }) {
                     <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
                         <View style={{
-                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
+                        flexDirection: "row", gap: 12, alignItems: "center", justifyContent: "space-between" 
                         }}>
                         <View style={{ width: "85%" }}>
 
@@ -364,7 +430,7 @@ export default function EditRecipe ({ navigation, route }) {
                             />
                             </View>
 
-                            <View style={{ flexDirection: "row", gap: 8 }}> 
+                            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}> 
 
                             <View style={{ marginVertical: 20, flex: 1 }}>
                                 <TextInput
@@ -377,19 +443,17 @@ export default function EditRecipe ({ navigation, route }) {
                                 />
                             </View>
 
-                            <View style={{ marginVertical: 20, flex: 3 }}>
-                            <Autocomplete 
-                                data={["cups", "tbsp", "tsp", "g", "kg", "ml", "l", "oz", "lb", "pt", "qt", "gal", "fl oz", "pinch"]} 
-                                placeholder="Unit (i.e. cups, tbsp, etc.)" 
-                                defaultValue={field.serving_unit}
-                                onSelect={(item) => {
-                                handleChange(idx, "serving_unit", item);
+                            <View style={{ marginVertical: 20, flex: 1 }}>
+                            <Button 
+                                text={field.serving_unit ? field.serving_unit : "Select a unit"}
+                                status="primary"
+                                outline={true}
+                                type="TouchableOpacity"
+                                onPress={() => {
+                                    unitBeingEdited = idx
+                                    setSliderVisible(true)
                                 }}
-
-                                onChangeText={e => {
-                                handleChange(idx, "serving_unit", e)
-                                }}
-                                />
+                            />
                             </View>
                             </View>
                             </View>
@@ -401,6 +465,7 @@ export default function EditRecipe ({ navigation, route }) {
                                 status="danger"
                                 type="TouchableOpacity"
                                 onPress={() => { handleRemoveIng(idx) }}
+                                style={{width: 50, height: 115 }}
                             />
                             </View>
                         </View>
@@ -447,6 +512,7 @@ export default function EditRecipe ({ navigation, route }) {
                             type="TouchableOpacity"
                             onPress={() => { handleRemoveStep(idx) }}
                             outline={true}
+                            style={{width: 50, height: 50 }}
                         />
                         </View>
                         </View>
@@ -470,6 +536,30 @@ export default function EditRecipe ({ navigation, route }) {
             </View>
 
         </ScrollView>
+
+        <SlidePicker.Parallel
+            visible={sliderVisible}
+            dataSource={sliderData}
+            values={["Select a unit"]}
+            wheels={1}
+            checkedTextStyle={{ fontWeight: 'bold', color: themeColor.primary300 }}
+            normalTextStyle={{ fontSize: 14, height: 60, color: themeColor.primary100 }}
+            onCancelClick={() => setSliderVisible(false)}
+            onConfirmClick={res => {
+                console.log(res)
+                handleChange(unitBeingEdited, "serving_unit", res[0].value)
+                setSliderVisible(false)
+                forceUpdate();
+            }}
+            itemHeight={100}
+            animationDuration={100}
+            contentBackgroundColor="#1a1820"
+            itemDividerColor="#1a1820"
+            titleText="Select a unit"
+            cancelText="Cancel"
+            onMaskClick={() => setSliderVisible(false)}
+            
+        />
       </Layout>
       <Toast />
     </KeyboardAvoidingView>
