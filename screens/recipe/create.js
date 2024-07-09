@@ -13,6 +13,7 @@ import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMethod } from "react-native-appwrite";
 import Autocomplete from '../../components/autocomplete';
 import SlidePicker from "react-native-slidepicker";
+import {launchImageLibrary} from 'react-native-image-picker';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -28,6 +29,7 @@ console.disableYellowBox = true;
 let recipe = {
     name: "",
     serving: "",
+    image: "",
     ing: [],
     steps: [],
     recipeId: ID.unique()
@@ -359,7 +361,44 @@ export default function CreateRecipe () {
                 </Section>
 
                 <Button
-                style={{ marginVertical: 10, marginHorizontal: 20 }}
+                style={{ marginTop: 10, marginHorizontal: 20 }}
+                leftContent={
+                    <Ionicons name="image" size={20} color={themeColor.primary} />
+                }
+                text="Upload Image"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => { 
+                    launchImageLibrary({ mediaType: 'photo', includeBase64: true }, (response) => {
+                        if (response.didCancel) {
+                            console.log('User cancelled image picker');
+                        } 
+                        else if (response.errorMessage) {
+                            console.log('ImagePicker Error: ', response.errorMessage);
+                        } 
+                        else {
+                            recipe['image'] = response.assets[0].base64;
+                            recipe['imageName'] = response.assets[0].fileName;
+                            forceUpdate();
+                        }
+                    })
+                 }}
+                />
+
+                <View style={{ flexDirection: "row", marginHorizontal: 20, marginTop: 15, alignItems: "center", justifyContent: "space-between" }}>
+                    <Text style={{ color: themeColor.primary300 }}>
+                        {recipe['imageName'] ? recipe['imageName'] + " selected" : "No image selected"}
+                    </Text>
+
+                    {recipe['image'] != "" &&
+                        <TouchableOpacity onPress={() => { recipe['image'] = ""; recipe['imageName'] = ""; forceUpdate() }}>
+                            <Text style={{ color: themeColor.danger }}>Remove Image</Text>
+                        </TouchableOpacity>
+                    }
+                </View>
+
+                <Button
+                style={{ marginTop: 50, marginHorizontal: 20 }}
                 leftContent={
                     <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
                 }

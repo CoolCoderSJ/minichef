@@ -18,6 +18,9 @@
       "entitlements": {
         "aps-environment": "development"
       },
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app uses the photo library to upload images."
+      }
     },
     "android": {
       "adaptiveIcon": {
