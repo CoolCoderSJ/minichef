@@ -12,6 +12,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Storage } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
+import PTRView from 'react-native-pull-to-refresh';
 
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -149,6 +150,10 @@ function Recipes() {
       style={{ flex: 1 }}
     >
       <Layout>
+        <PTRView onRefresh={() => {
+          updateData()
+          forceUpdate()
+        }} >
         <TopNav
           leftContent={
             <Ionicons
@@ -338,6 +343,7 @@ function Recipes() {
             </View>
 
         </ScrollView>
+      </PTRView>
       </Layout>
       <Toast />
     </KeyboardAvoidingView>

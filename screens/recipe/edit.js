@@ -25,10 +25,11 @@ const storage = new Storage(client);
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
 console.disableYellowBox = true;
-
+const countOccurrences = (arr, val) => arr.reduce((a, v) => (v === val ? a + 1 : a), 0);
 
 let recipe = {};
 let recipes = [];
+let imgNames = [];
 let stage = 1;
 
 let unitBeingEdited = null;
@@ -115,7 +116,8 @@ get("login").then(res => userId = res)
                 steps: result.documents[i].steps,
                 serving: result.documents[i].servings,
                 recipeId: result.documents[i]['$id'],
-                imageId: result.documents[i].imageId
+                imageId: result.documents[i].imageId,
+                stepImages: result.documents[i].stepImages
               })
             };
           }
@@ -134,6 +136,8 @@ export default function EditRecipe ({ navigation, route }) {
 
   React.useEffect(() => {
     stage = 1;
+    recipes = []
+    recipe = {}
     db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
         console.log("ingredients", result)
         let mealDB = []
@@ -165,7 +169,8 @@ export default function EditRecipe ({ navigation, route }) {
                 steps: result.documents[i].steps,
                 serving: result.documents[i].servings,
                 recipeId: result.documents[i]['$id'],
-                imageId: result.documents[i].imageId
+                imageId: result.documents[i].imageId,
+                stepImages: result.documents[i].stepImages
               })
             };
           }
@@ -173,15 +178,35 @@ export default function EditRecipe ({ navigation, route }) {
     .then(() => {
         console.log("IDX", route.params.idx)
         recipe = recipes[route.params.idx]
+        recipe.imageName = ""
+        imgNames = []
+        for (let i = 0; i < recipe.stepImages.length; i++) {
+            imgNames.push("")
+        }
         setFields(recipe['ing']);
         setSteps(recipe['steps']);
-
-        if (recipe.imageId) {
+    })
+    .then(() => {
+        console.log("RECIPE", recipe)
+        if (recipe.imageId != "") {
             storage.getFile("images", recipe.imageId).then((res) => {
-                console.log(res)
+                console.log("fetched file")
                 recipe.imageName = res.name
                 forceUpdate()
             })
+        }
+        if (recipe.image) {
+            recipe.imageName = recipe.image.name
+        }
+
+        for (let i = 0; i < recipe.stepImages.length; i++) {
+            if (recipe.stepImages[i] != "") {
+                storage.getFile("images", recipe.stepImages[i]).then((res) => {
+                    console.log("fetched file")
+                    imgNames[i] = res.name
+                    forceUpdate()
+                })
+            }
         }
     })
 
@@ -233,6 +258,8 @@ export default function EditRecipe ({ navigation, route }) {
     values.push(null);
     setSteps(values);
     recipe['steps'] = values;
+    recipe.stepImages.push("")
+    imgNames.push("")
   }
 
   function handleRemoveStep(i) {
@@ -240,6 +267,8 @@ export default function EditRecipe ({ navigation, route }) {
     values.splice(i, 1);
     setSteps(values);
     recipe['steps'] = values;
+    recipe.stepImages.splice(i, 1)
+    imgNames.splice(i, 1)
   }
 
 
@@ -304,7 +333,18 @@ export default function EditRecipe ({ navigation, route }) {
         serving_amt: serving_amt,
         steps: recipe.steps,
         name: recipe.name,
-        servings: Number(recipe.serving)
+        servings: Number(recipe.serving),
+        stepImages: []
+    }
+
+    for (let i = 0; i < recipe.stepImages.length; i++) {
+        if (i >= recipe.steps.length) {
+            recipe.stepImages.splice(i, 1)
+        }
+    }
+
+    for (let i = 0; i < recipe.stepImages.length; i++) {
+        data.stepImages.push("")
     }
 
     if (recipe.image) {
@@ -325,7 +365,30 @@ export default function EditRecipe ({ navigation, route }) {
         data['imageId'] = ""
     }
 
-    while (recipe.image != "" && data['imageId'] == undefined) {
+    console.log("DATA", data.stepImages, recipe.stepImages)
+
+    for (let i = 0; i < recipe.stepImages.length; i++) {
+        console.log("TYPE", typeof recipe.stepImages[i])
+        if (recipe.stepImages[i] && typeof recipe.stepImages[i] == "object") {
+            console.log("UPLOADING IMAGE")
+            storage.createFile("images", ID.unique(), recipe.stepImages[i], [
+                Permission.read(Role.user(userId)),
+                Permission.write(Role.user(userId)),
+                Permission.update(Role.user(userId)),
+                Permission.delete(Role.user(userId)),
+            ])
+            .then(file => {
+                console.log(file)
+                data.stepImages[i] = file.$id
+            })
+            .catch(err => console.error(err))
+        }
+        else if (typeof recipe.stepImages[i] == "string") {
+            data.stepImages[i] = recipe.stepImages[i]
+        }
+    }
+
+    while ((recipe.image != "" && data['imageId'] == undefined) || countOccurrences(data.stepImages, "") > countOccurrences(recipe.stepImages, "")) {
         await new Promise(r => setTimeout(r, 500));
     }
 
@@ -441,7 +504,7 @@ export default function EditRecipe ({ navigation, route }) {
                 status="primary"
                 type="TouchableOpacity"
                 onPress={() => { 
-                    launchImageLibrary({ mediaType: 'photo', includeBase64: true }, (response) => {
+                    launchImageLibrary({ mediaType: 'photo' }, (response) => {
                         if (response.didCancel) {
                             console.log('User cancelled image picker');
                         } 
@@ -605,12 +668,7 @@ export default function EditRecipe ({ navigation, route }) {
                 return (
                     <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
-
-                        <View style={{
-                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
-                        }}>
-
-                        <View style={{ marginVertical: 10, width: "85%" }}>
+                        <View style={{ marginVertical: 10 }}>
                         <TextInput
                             placeholder="Enter a step.."
                             onChangeText={e => {
@@ -620,17 +678,49 @@ export default function EditRecipe ({ navigation, route }) {
                         />
                         </View>
 
-                        <View style={{ marginVertical: 10 }}>
+                        <View style={{ marginVertical: 10, flexDirection: "row", alignItems: "center", gap: 12 }}>
+                        <Button
+                        leftContent={
+                            <Ionicons name="image" size={20} color={themeColor.primary} />
+                        }
+                        style={{ flex: 3 }}
+                        text={recipe.stepImages[idx] ? imgNames[idx] : "Add Image"}
+                        status="primary"
+                        type="TouchableOpacity"
+                        outline={true}
+                        onPress={() => { 
+                            launchImageLibrary({ mediaType: 'photo' }, (response) => {
+                                if (response.didCancel) {
+                                    console.log('User cancelled image picker');
+                                } 
+                                else if (response.errorMessage) {
+                                    console.log('ImagePicker Error: ', response.errorMessage);
+                                } 
+                                else {
+                                    recipe.stepImages[idx] = response.assets[0]
+                                    recipe.stepImages[idx].size = recipe.stepImages[idx].fileSize
+                                    recipe.stepImages[idx].name = recipe.stepImages[idx].fileName
+                                    imgNames[idx] = recipe.stepImages[idx].name
+                                    forceUpdate();
+                                }
+                            })
+                        }}
+                        />
                         <Button
                             text={<Ionicons name="trash-outline" size={20} color={themeColor.danger} />}
                             status="danger"
                             type="TouchableOpacity"
                             onPress={() => { handleRemoveStep(idx) }}
                             outline={true}
-                            style={{width: 50, height: 50 }}
+                            style={{ flex: 1 }}
                         />
                         </View>
-                        </View>
+
+                        { recipe.stepImages[idx] &&
+                            <TouchableOpacity onPress={() => { recipe.stepImages[idx] = ""; imgNames[idx] = ""; forceUpdate() }}>
+                                <Text style={{ color: themeColor.danger500 }}>Remove Image</Text>
+                            </TouchableOpacity>
+                        }
 
                     </SectionContent>
                     </Section>

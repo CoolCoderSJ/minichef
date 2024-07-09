@@ -58,7 +58,8 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
             steps: result.documents[i].steps,
             serving: result.documents[i].servings,
             recipeId: result.documents[i]['$id'],
-            imageId: result.documents[i].imageId
+            imageId: result.documents[i].imageId,
+            stepImages: result.documents[i].stepImages
           })
           filterAllowed.push(i);
         };
@@ -80,7 +81,8 @@ export default function ViewRecipe ({ navigation, route }) {
 
 
     recipeId = route.params.idx; 
-    React.useEffect(() => {
+
+    const getData = async () => {
       db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
         if (result.total > 0) {
             for (let i = 0; i < result.documents.length; i++) {
@@ -98,7 +100,8 @@ export default function ViewRecipe ({ navigation, route }) {
                 steps: result.documents[i].steps,
                 serving: result.documents[i].servings,
                 recipeId: result.documents[i]['$id'],
-                imageId: result.documents[i].imageId
+                imageId: result.documents[i].imageId,
+                stepImages: result.documents[i].stepImages
               })
               filterAllowed.push(i);
             };
@@ -118,7 +121,7 @@ export default function ViewRecipe ({ navigation, route }) {
           forceUpdate()
         }
     })
-    }, []);
+    }
 
   function handleCancel () {
     setDeleteVisible(false);
@@ -148,7 +151,8 @@ export default function ViewRecipe ({ navigation, route }) {
           steps: result.documents[i].steps,
           serving: result.documents[i].servings,
           recipeId: result.documents[i]['$id'],
-          imageId: result.documents[i].imageId
+          imageId: result.documents[i].imageId,
+          stepImages: result.documents[i].stepImages
         })
       };
   })
@@ -194,6 +198,9 @@ export default function ViewRecipe ({ navigation, route }) {
         setServings(currentRecipe['serving'])
         
       updateData();
+      getData().then(() => {
+        forceUpdate()
+      })
     })
 
     Toast.hide()
@@ -402,7 +409,7 @@ export default function ViewRecipe ({ navigation, route }) {
                     <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginVertical: 7 }}>
                       <SectionContent>
                           <View style={{ marginBottom: 10 }}>
-                              <Text style={{ fontSize: 17 }}>{idx + 1}. 
+                              <Text style={{ fontSize: 17 }}>{idx + 1}.&nbsp;
                                   <RNJsxParser renderInWrapper={false} bindings={{ 
                                     handlePress: (textToRender) => {
                                       Toast.show({
@@ -416,6 +423,20 @@ export default function ViewRecipe ({ navigation, route }) {
                                     components={{ Text }} 
                                     jsx={text} />
                               </Text>
+                              
+                              {recipes[recipeId].stepImages[idx] &&
+                              <Image source={{
+                                uri: storage.getFileView("images", recipes[recipeId].stepImages[idx]).toString()
+                              }}
+                              resizeMode='cover'
+                              style={{
+                                width: Dimensions.get('window').width - 80,
+                                height: 200,
+                                borderRadius: 10,
+                                marginTop: 10
+                              }}
+                              />
+                              }
                           </View>
                       </SectionContent>
                     </Section>
