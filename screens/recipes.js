@@ -10,7 +10,7 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Query, Storage } from "react-native-appwrite";
+import { Client, Databases, Query, Storage, Functions } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
 import PTRView from 'react-native-pull-to-refresh';
 
@@ -22,6 +22,7 @@ const client = new Client()
 
 const db = new Databases(client);
 const storage = new Storage(client);
+const functions = new Functions(client);
 
 const setObj = async (key, value) => { try { const jsonValue = JSON.stringify(value); await AsyncStorage.setItem(key, jsonValue) } catch (e) { console.log(e) } }
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
@@ -251,17 +252,29 @@ function Recipes() {
               }
               )}
               <Button
-                style={{ marginVertical: 10, marginHorizontal: 20 }}
+                style={{ marginTop: 20, marginBottom: 10, marginHorizontal: 20 }}
                 leftContent={
                   <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
                 }
-                text="Add New Recipe"
+                text="Create New Recipe"
                 status="primary"
                 type="TouchableOpacity"
                 onPress={() => navigation.navigate("Create Recipe")}
               />
 
-                <View style={{ flexDirection: "row", height: "fit-content", marginTop: 25, gap: 24 }}>
+              <View style={{ marginVertical: 10, marginHorizontal: 20 }}>
+                <Button
+                  leftContent={
+                    <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
+                  }
+                  text="Search Recipes"
+                  type="TouchableOpacity"
+                  status='primary'
+                  onPress={() => navigation.navigate("Search Recipes")}
+                />
+              </View>
+
+                <View style={{ flexDirection: "row", height: "fit-content", marginBottom: 20, gap: 24 }}>
                 <View style={{ marginLeft: 20, marginVertical: 10, flex: 10, width: "100%" }}>
                   <TextInput
                     placeholder="Import from URL..."
@@ -357,6 +370,7 @@ import CreateRecipe from './recipe/create';
 import ViewRecipe from './recipe/view';
 import EditRecipe from './recipe/edit';
 import Walkthrough from './recipe/walkthrough';
+import SearchRecipes from './recipe/search';
 
 export default function RMain() {
   return (
@@ -371,6 +385,7 @@ export default function RMain() {
       <RecipeStack.Screen name="View Recipe" component={ViewRecipe} />
       <RecipeStack.Screen name="Edit Recipe" component={EditRecipe} />
       <RecipeStack.Screen name="Walkthrough" component={Walkthrough} />
+      <RecipeStack.Screen name="Search Recipes" component={SearchRecipes} />
 
     </RecipeStack.Navigator>
   );

@@ -68,7 +68,7 @@ function Index () {
             </Section>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Grocery Lists")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Groceries")}>
             <Section style={{ marginTop: 30, marginHorizontal: 20 }}>
               <SectionContent>
                 <View style={{
@@ -84,7 +84,7 @@ function Index () {
             </Section>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Unit Conversion")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Units")}>
             <Section style={{ marginTop: 30, marginHorizontal: 20 }}>
               <SectionContent>
                 <View style={{
@@ -124,8 +124,8 @@ export default App = () => {
 
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'Recipes') iconName = focused ? 'book' : 'book-outline';
-          else if (route.name === 'Grocery Lists') iconName = focused ? 'newspaper' : 'newspaper-outline';
-          else if (route.name === 'Unit Conversion') iconName = focused ? 'calculator' : 'calculator-outline';
+          else if (route.name === 'Groceries') iconName = focused ? 'newspaper' : 'newspaper-outline';
+          else if (route.name === 'Units') iconName = focused ? 'calculator' : 'calculator-outline';
           else if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -151,8 +151,8 @@ export default App = () => {
         
         <Tab.Screen name="Home" component={Index} />
         <Tab.Screen name="Recipes" component={Recipes} />
-        <Tab.Screen name="Grocery Lists" component={Grocery} />
-        <Tab.Screen name="Unit Conversion" component={UnitConversion} />
+        <Tab.Screen name="Groceries" component={Grocery} />
+        <Tab.Screen name="Units" component={UnitConversion} />
         <Tab.Screen name="Settings" component={Settings} />
 
       </Tab.Navigator>

@@ -31,6 +31,25 @@
             "events": [],
             "schedule": "",
             "timeout": 15
+        },
+        {
+            "$id": "search",
+            "name": "search",
+            "runtime": "python-3.9",
+            "execute": [
+                "users"
+            ],
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.py",
+            "commands": "pip install -r requirements.txt",
+            "ignore": [
+                "__pypackages__"
+            ],
+            "path": "functions/search"
         }
     ]
 }
