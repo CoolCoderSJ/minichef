@@ -251,18 +251,19 @@ function Recipes() {
                 )
               }
               )}
-              <Button
-                style={{ marginTop: 20, marginBottom: 10, marginHorizontal: 20 }}
-                leftContent={
-                  <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
-                }
-                text="Create New Recipe"
-                status="primary"
-                type="TouchableOpacity"
-                onPress={() => navigation.navigate("Create Recipe")}
-              />
 
-              <View style={{ marginVertical: 10, marginHorizontal: 20 }}>
+              <View style={{ marginHorizontal: 20, marginVertical: 20, flexDirection: "row", gap: 12 }}>
+                <Button
+                style={{ flex: 1 }}
+                  leftContent={
+                    <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
+                  }
+                  text="Create Recipe"
+                  status="primary"
+                  type="TouchableOpacity"
+                  onPress={() => navigation.navigate("Create Recipe")}
+                />
+
                 <Button
                   leftContent={
                     <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
