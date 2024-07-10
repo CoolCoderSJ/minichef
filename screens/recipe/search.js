@@ -10,9 +10,8 @@ import {
   themeColor, TopNav, useTheme
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
-import { Client, Databases, Functions, Storage, Permission, Role, InputFile } from "react-native-appwrite";
+import { Client, Databases, Functions, Storage, Permission, Role, ID } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
-import { Buffer } from 'buffer';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -202,23 +201,13 @@ export default function SearchRecipes () {
                                         serving_units.push(recipe.recipe.ingredients[j].measure)
                                         }
 
-                                        const imageResponse = await fetch(recipe.recipe.image);
-                                        if (!imageResponse.ok) {
-                                        throw new Error("Failed to fetch image from URL");
-                                        }
-
-                                        const arrayBuffer = await imageResponse.arrayBuffer();
-                                        const buffer = Buffer.from(arrayBuffer);
-
-                                        const inputFile = InputFile.fromBuffer(buffer, ID.unique());
-
-                                        const file = await storage.createFile("images", ID.unique(), inputFile, [
-                                            Permission.read(Role.user(userId)),
-                                            Permission.write(Role.user(userId)),
-                                            Permission.update(Role.user(userId)),
-                                            Permission.delete(Role.user(userId)),
-                                        ])
-
+                                        const exec = await functions.createExecution(
+                                            'upload-from-url',
+                                            JSON.stringify({url: recipe.recipe.image, userId: userId}),
+                                            false
+                                        )
+                                        let fileId = exec.responseBody
+                                        console.log(fileId)
 
                                         let data = {
                                             uid: userId,
@@ -229,19 +218,23 @@ export default function SearchRecipes () {
                                             name: recipe.recipe.label,
                                             servings: Number(recipe.recipe.yield),
                                             link: recipe.recipe.url,
-                                            image: file.$id,
+                                            imageId: fileId,
                                             stepImages: []
                                         }
 
                                         console.log(data)
-                                        console.log(file)
 
-                                        // await db.createDocument("data", "recipes", ID.unique(), data)
-                                        // Toast.show({
-                                        //     type: 'success',
-                                        //     text1: 'Recipe saved!',
-                                        // })
-                                        // navigation.goBack()
+                                        await db.createDocument("data", "recipes", ID.unique(), data, [
+                                            Permission.read(Role.user(userId)),
+                                            Permission.write(Role.user(userId)),
+                                            Permission.update(Role.user(userId)),
+                                            Permission.delete(Role.user(userId)),
+                                        ])
+                                        Toast.show({
+                                            type: 'success',
+                                            text1: 'Recipe saved!',
+                                        })
+                                        navigation.goBack()
                                     }}
                                 />
                             </View>

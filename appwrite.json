@@ -50,6 +50,25 @@
                 "__pypackages__"
             ],
             "path": "functions/search"
+        },
+        {
+            "$id": "upload-from-url",
+            "name": "Upload Image from URL",
+            "runtime": "python-3.9",
+            "execute": [
+                "users"
+            ],
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.py",
+            "commands": "pip install -r requirements.txt",
+            "ignore": [
+                "__pypackages__"
+            ],
+            "path": "functions/Upload Image from URL"
         }
     ]
 }

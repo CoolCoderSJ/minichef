@@ -267,7 +267,7 @@ function Recipes() {
                   leftContent={
                     <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
                   }
-                  text="Search Recipes"
+                  text="Search Recipes Online"
                   type="TouchableOpacity"
                   status='primary'
                   onPress={() => navigation.navigate("Search Recipes")}

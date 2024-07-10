@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as React from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, BackHandler, Image } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Dimensions, BackHandler, Image, Linking } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Button, Layout, Section, SectionContent, Text,
@@ -59,7 +59,8 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
             serving: result.documents[i].servings,
             recipeId: result.documents[i]['$id'],
             imageId: result.documents[i].imageId,
-            stepImages: result.documents[i].stepImages
+            stepImages: result.documents[i].stepImages,
+            link: result.documents[i].link
           })
           filterAllowed.push(i);
         };
@@ -101,7 +102,8 @@ export default function ViewRecipe ({ navigation, route }) {
                 serving: result.documents[i].servings,
                 recipeId: result.documents[i]['$id'],
                 imageId: result.documents[i].imageId,
-                stepImages: result.documents[i].stepImages
+                stepImages: result.documents[i].stepImages,
+                link: result.documents[i].link
               })
               filterAllowed.push(i);
             };
@@ -152,7 +154,8 @@ export default function ViewRecipe ({ navigation, route }) {
           serving: result.documents[i].servings,
           recipeId: result.documents[i]['$id'],
           imageId: result.documents[i].imageId,
-          stepImages: result.documents[i].stepImages
+          stepImages: result.documents[i].stepImages,
+          link: result.documents[i].link
         })
       };
   })
@@ -323,6 +326,7 @@ export default function ViewRecipe ({ navigation, route }) {
 
 
                 <View style={{ marginBottom: 27, height: 50, marginLeft: 33 }}>
+                  {currentRecipe && !currentRecipe.link &&
                   <Button
                     leftContent={
                       <Ionicons name="play-outline" size={20} color={themeColor.white} />
@@ -333,6 +337,19 @@ export default function ViewRecipe ({ navigation, route }) {
                     type="TouchableOpacity"
                     onPress={() => { currentIndex = 0; navigation.navigate("Walkthrough", { idx: recipeId, servings: servings }) }}
                   />
+                  }
+                  {currentRecipe && currentRecipe.link &&
+                  <Button
+                    leftContent={
+                      <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
+                    }
+                    style={{ paddingHorizontal: 40 }}
+                    text="Visit"
+                    status="primary"
+                    type="TouchableOpacity"
+                    onPress={() => { Linking.openURL(currentRecipe.link) }}
+                  />
+                  }
                 </View>
 
 
