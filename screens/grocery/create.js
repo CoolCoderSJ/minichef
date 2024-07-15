@@ -15,6 +15,7 @@ import { Client, Databases, Query, Permission, Role, ID, Functions, ExecutionMet
 import Toast from 'react-native-toast-message';
 import Autocomplete from '../../components/autocomplete';
 import Modal from "react-native-modal";
+import SlidePicker from "react-native-slidepicker";
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -29,7 +30,68 @@ const get = async (key) => { try { const value = await AsyncStorage.getItem(key)
 const delkey = async (key, value) => { try { await AsyncStorage.removeItem(key) } catch (e) { console.log(e) } }
 const getAll = async () => { try { const keys = await AsyncStorage.getAllKeys(); return keys } catch (error) { console.error(error) } }
 
-let userId, mealDB = [], ing = [], carbFood = [], recipes = [], ingredients = [], name = ""
+let userId, mealDB = [], ing = [], carbFood = [], recipes = [], ingredients = [], name = "", unitBeingEdited = [], filter = []
+let sliderData = [
+    [
+      {
+        "label": "Tablespoon(s)",
+        "value": "tbsp"
+      },
+      {
+        "label": "Teaspoon(s)",
+        "value": "tsp"
+      },
+      {
+        "label": "Cups",
+        "value": "cups"
+      },
+        {
+            "label": "Gram(s)",
+            "value": "g"
+        },
+        {
+            "label": "Kilogram(s)",
+            "value": "kg"
+        },
+        {
+            "label": "Milliliter(s)",
+            "value": "ml"
+        },
+        {
+            "label": "Liter(s)",
+            "value": "l"
+        },
+        {
+            "label": "Ounce(s)",
+            "value": "oz"
+        },
+        {
+            "label": "Pound(s)",
+            "value": "lb"
+        },
+        {
+            "label": "Pint(s)",
+            "value": "pt"
+        },
+        {
+            "label": "Quart(s)",
+            "value": "qt"
+        },
+        {
+            "label": "Gallon(s)",
+            "value": "gal"
+        },
+        {
+            "label": "Fluid Ounce(s)",
+            "value": "fl oz"
+        },
+        {
+            "label": "Pinch",
+            "value": "pinch"
+        },
+    ],
+  ]
+
 get("login").then(res => userId = res)
 .then(() => {
     db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
@@ -59,10 +121,10 @@ export default function CreateGrocery ({ navigation, route }) {
 
   const { isDarkmode, setTheme } = useTheme();
   const [form, setForm] = React.useState({ name: "", items: [] });
-  const [filterList, setFilterList] = React.useState([]);
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [showRecipePicker, setShowRecipePicker] = React.useState(false);
   const [showImport, setShowImport] = React.useState(false);
+  const [sliderVisible, setSliderVisible] = React.useState(false);
 
   const styles = StyleSheet.create({
     listItem: {
@@ -77,8 +139,12 @@ export default function CreateGrocery ({ navigation, route }) {
     },
   });
 
-  React.useEffect(() => {
+    React.useEffect(() => {
     const refreshData = navigation.addListener('focus', () => {
+        let fieldset = form.items
+        fieldset = [{src: "Groceries", items: []}]
+        setForm({...form, items: fieldset})
+
         recipes = []
         db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
             console.log("ingredients", result)
@@ -87,11 +153,14 @@ export default function CreateGrocery ({ navigation, route }) {
                 }
           })
           .then(() => {
-            let filter = []
+            filter = []
           for (let i = 0; i < mealDB.length; i++) {
+            console.log(mealDB[i])
               filter.push(mealDB[i]);
           }
-            setFilterList(filter);
+        })
+        .then(() => {
+            console.log("filter list", filter)
         })
 
         db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
@@ -139,22 +208,13 @@ export default function CreateGrocery ({ navigation, route }) {
     }
 
     const handleRemoveIng = (idx, id) => {
+        console.log(form, idx, id)
         let fieldset = form.items
-        fieldset[idx, id].items.splice(id, 1)
+        console.log(fieldset[idx])
+        fieldset[idx].items.splice(id, 1)
         setForm({...form, items: fieldset})
     }
 
-    const handleAddCat = () => {
-        let fieldset = form.items
-        fieldset.push({src: "", items: []})
-        setForm({...form, items: fieldset})
-    }
-
-    const handleRemoveCat = (id) => {
-        let fieldset = form.items
-        fieldset.splice(id, 1)
-        setForm({...form, items: fieldset})
-    }
     
     const save = async () => {
         Toast.show({
@@ -290,88 +350,71 @@ export default function CreateGrocery ({ navigation, route }) {
             {form.items.map((field, idx) => {
             return (
                 <>
-                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 40 }}>
-                    <SectionContent>
-                        <View style={{ marginBottom: 20 }}>
-                        <TextInput
-                            onChangeText={(value) => {
-                            updateField(idx, "src", value);
-                            }}
-                            placeholder="Category Name"
-                            defaultValue={field.src}
-                        />
-                        </View>
-                    </SectionContent>
-                </Section>
                 {field.items.map((item, id) => {
                     return (
                     <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
                     <SectionContent>
-                        <View style={{
-                        flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" 
-                        }}>
-                        <View style={{ width: "85%" }}>
-    
-                            <View>
+                        <View>
                             <Autocomplete 
-                            data={filterList} 
+                            data={filter} 
                             placeholder="Start typing to search foods..." 
                             defaultValue={item.name}
                             onSelect={(e) => {
                             updateFood(idx, id, e, "name");
                             }}
-    
+
                             onChangeText={e => {
                             updateFood(idx, id, e, "name")
                             }}
                             />
-                            </View>
-    
-                            <View style={{ flexDirection: "row", gap: 8 }}> 
-    
+                        </View>
+
+                        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}> 
+
                             <View style={{ marginVertical: 20, flex: 1 }}>
                                 <TextInput
                                 placeholder="Amt"
-                                defaultValue={String(item.amount).replace("undefined", "")}
                                 onChangeText={e => {
                                     updateFood(idx, id, e, "amount");
                                 }}
+                                defaultValue={String(item.amount).replace("undefined", "")}
                                 keyboardType='numeric'
+                                style={{ height: 50 }}
                                 />
                             </View>
-    
-                            <View style={{ marginVertical: 20, flex: 3 }}>
-                            <Autocomplete 
-                                data={["cups", "tbsp", "tsp", "g", "kg", "ml", "l", "oz", "lb", "pt", "qt", "gal", "fl oz", "pinch"]} 
-                                placeholder="Unit (i.e. cups, tbsp, etc.)" 
-                                defaultValue={item.unit}
-                                onSelect={(e) => {
-                                updateFood(idx, id, e, "unit");
+
+                            <View style={{ flex: 1 }}>
+                            <Button 
+                                text={item.unit ? item.unit : "Unit"}
+                                status="primary"
+                                outline={true}
+                                type="TouchableOpacity"
+                                onPress={() => {
+                                    unitBeingEdited = [idx, id]
+                                    setSliderVisible(true)
                                 }}
-    
-                                onChangeText={e => {
-                                updateFood(idx, id, e, "unit")
-                                }}
-                                />
+                                style={{ height: 50 }}
+                            />
                             </View>
-                            </View>
-                            </View>
-    
-                            <View style={{ marginBottom: 20 }}>
+
+                            <View>
                             <Button
-                                text={<Ionicons name="trash-outline" size={20} color={themeColor.white} />}
+                                text={<Ionicons name="trash-outline" size={20} color={themeColor.danger} />}
                                 outline={true}
                                 status="danger"
                                 type="TouchableOpacity"
                                 onPress={() => { handleRemoveIng(idx, id) }}
+                                style={{ height: 50 }}
                             />
                             </View>
+
                         </View>
                     </SectionContent>
                     </Section>
                     )
                 })}
 
+                {idx == 0 &&
                 <View style={{
                     flexDirection: "row", marginHorizontal: 20, justifyContent: "space-between", gap: 8
                 }}>
@@ -384,38 +427,15 @@ export default function CreateGrocery ({ navigation, route }) {
                     status="primary"
                     type="TouchableOpacity"
                     onPress={() => handleAddIng(idx)}
-                    outline={true}
-                    />
-
-                    <Button 
-                    style={{ marginVertical: 10, flex: 1 }}
-                    leftContent={
-                        <Ionicons name="trash-outline" size={20} color={themeColor.danger} />
-                    }
-                    text="Remove Category"
-                    status="danger"
-                    type="TouchableOpacity"
-                    onPress={() => handleRemoveCat(idx)}
-                    outline={true}
                     />
                 </View>
+                }
 
                 </>
             );
             })}
             
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginHorizontal: 20, gap: 8, marginTop: 40 }}>
-            <Button
-            style={{ marginVertical: 10, flex: 1 }}
-            leftContent={
-                <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
-            }
-            text="New Category"
-            status="primary"
-            type="TouchableOpacity"
-            onPress={handleAddCat}
-            />
-
             <Button
             style={{ marginVertical: 10, flex: 1 }}
             leftContent={
@@ -523,6 +543,30 @@ export default function CreateGrocery ({ navigation, route }) {
 
 
         </ScrollView>
+        
+        <SlidePicker.Parallel
+            visible={sliderVisible}
+            dataSource={sliderData}
+            values={["Select a unit"]}
+            wheels={1}
+            checkedTextStyle={{ fontWeight: 'bold', color: themeColor.primary300 }}
+            normalTextStyle={{ fontSize: 14, height: 60, color: themeColor.primary100 }}
+            onCancelClick={() => setSliderVisible(false)}
+            onConfirmClick={res => {
+                console.log(res)
+                updateFood(unitBeingEdited[0], unitBeingEdited[1], res[0].value, "unit")
+                setSliderVisible(false)
+                forceUpdate();
+            }}
+            itemHeight={100}
+            animationDuration={100}
+            contentBackgroundColor="#1a1820"
+            itemDividerColor="#1a1820"
+            titleText="Select a unit"
+            cancelText="Cancel"
+            onMaskClick={() => setSliderVisible(false)}
+            
+        />
 
         <Toast />
       </Layout>

@@ -87,226 +87,230 @@ export default function UnitConversion () {
                 <View style={{ marginBottom: 20 }}>
                     <Text size="h3" fontWeight='medium' style={{ textAlign: "center" }}>Mass</Text>
                 </View>
-                <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                        placeholder="Starting value"
-                        keyboardType="numeric"
-                        defaultValue={MPVStartValue}
-                        onChangeText={(val) => {
-                            setMPVStartValue(val)
-                            let baseline
-                            if (['mg', 'g', 'kg'].includes(MPVStart)) {
-                                if (MPVStart === 'mg') {
-                                    baseline = val / 1000
-                                }
-                                if (MPVStart === 'g') {
-                                    baseline = val
-                                }
-                                if (MPVStart === 'kg') {
-                                    baseline = val * 1000
-                                }
-                            }
-                            else {
-                                if (MPVStart === 'oz') {
-                                    baseline = val * 28.35
-                                }
-                                if (MPVStart === 'lb') {
-                                    baseline = val * 453.592
-                                }
-                            }
 
-                            let mg = baseline * 1000
-                            let g = baseline
-                            let kg = baseline / 1000
-                            let oz = baseline / 28.35
-                            let lb = baseline / 453.592
+                <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20, alignItems: "center", width: "100%", gap: 16 }}>
+                    <View style={{ flex: 1 }}>
+                        <View style={{ marginBottom: 20 }}>
+                            <Picker
+                                items={massItems}
+                                value={MPVStart}
+                                placeholder="Select a Unit"
+                                onValueChange={(val) => {
+                                    setMPVStart(val)
+                                    let baseline
+                                    if (MPVEnd === 'mg') {
+                                        baseline = MPVEndValue / 1000
+                                    }
+                                    if (MPVEnd === 'g') {
+                                        baseline = MPVEndValue
+                                    }
+                                    if (MPVEnd === 'kg') {
+                                        baseline = MPVEndValue * 1000
+                                    }
 
-                            if (MPVEnd === 'mg') {
-                                setMPVEndValue(String(mg))
-                            }
-                            if (MPVEnd === 'g') {
-                                setMPVEndValue(String(g))
-                            }
-                            if (MPVEnd === 'kg') {
-                                setMPVEndValue(String(kg))
-                            }
-                            if (MPVEnd === 'oz') {
-                                setMPVEndValue(String(baseline / 28.35))
-                            }
-                            if (MPVEnd === 'lb') {
-                                setMPVEndValue(String(baseline / 453.592))
-                            }
+                                    if (MPVEnd === 'oz') {
+                                        baseline = val * 28.35
+                                    }
+                                    if (MPVEnd === 'lb') {
+                                        baseline = val * 453.592
+                                    }
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
-                <View style={{ marginBottom: 20 }}>
-                    <Picker
-                        items={massItems}
-                        value={MPVStart}
-                        placeholder="Select a Unit"
-                        onValueChange={(val) => {
-                            setMPVStart(val)
-                            let baseline
-                            if (['mg', 'g', 'kg'].includes(val)) {
-                                if (val === 'mg') {
-                                    baseline = MPVStartValue / 1000
-                                }
-                                if (val === 'g') {
-                                    baseline = MPVStartValue
-                                }
-                                if (val === 'kg') {
-                                    baseline = MPVStartValue * 1000
-                                }
-                            }
-                            else {
-                                if (MPVStart === 'oz') {
-                                    baseline = val * 28.35
-                                }
-                                if (MPVStart === 'lb') {
-                                    baseline = val * 453.592
-                                }
-                            }
+                                    let mg = baseline * 1000
+                                    let g = baseline
+                                    let kg = baseline / 1000
+                                    let oz = baseline / 28.35
+                                    let lb = baseline / 453.592
 
-                            let mg = baseline * 1000
-                            let g = baseline
-                            let kg = baseline / 1000
-                            let oz = baseline / 28.35
-                            let lb = baseline / 453.592
+                                    if (val === 'mg') {
+                                        setMPVStartValue(String(mg))
+                                    }
+                                    if (val === 'g') {
+                                        setMPVStartValue(String(g))
+                                    }
+                                    if (val === 'kg') {
+                                        setMPVStartValue(String(kg))
+                                    }
+                                    if (val === 'oz') {
+                                        setMPVStartValue(String(baseline / 28.35))
+                                    }
+                                    if (val === 'lb') {
+                                        setMPVStartValue(String(baseline / 453.592))
+                                    }
 
-                            if (MPVEnd === 'mg') {
-                                setMPVEndValue(String(mg))
-                            }
-                            if (MPVEnd === 'g') {
-                                setMPVEndValue(String(g))
-                            }
-                            if (MPVEnd === 'kg') {
-                                setMPVEndValue(String(kg))
-                            }
-                            if (MPVEnd === 'oz') {
-                                setMPVEndValue(String(baseline / 28.35))
-                            }
-                            if (MPVEnd === 'lb') {
-                                setMPVEndValue(String(baseline / 453.592))
-                            }
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
+                        <View>
+                            <TextInput
+                                placeholder="Starting value"
+                                keyboardType="numeric"
+                                defaultValue={MPVStartValue}
+                                onChangeText={(val) => {
+                                    setMPVStartValue(val)
+                                    let baseline
+                                    if (['mg', 'g', 'kg'].includes(MPVStart)) {
+                                        if (MPVStart === 'mg') {
+                                            baseline = val / 1000
+                                        }
+                                        if (MPVStart === 'g') {
+                                            baseline = val
+                                        }
+                                        if (MPVStart === 'kg') {
+                                            baseline = val * 1000
+                                        }
+                                    }
+                                    else {
+                                        if (MPVStart === 'oz') {
+                                            baseline = val * 28.35
+                                        }
+                                        if (MPVStart === 'lb') {
+                                            baseline = val * 453.592
+                                        }
+                                    }
+
+                                    let mg = baseline * 1000
+                                    let g = baseline
+                                    let kg = baseline / 1000
+                                    let oz = baseline / 28.35
+                                    let lb = baseline / 453.592
+
+                                    if (MPVEnd === 'mg') {
+                                        setMPVEndValue(String(mg))
+                                    }
+                                    if (MPVEnd === 'g') {
+                                        setMPVEndValue(String(g))
+                                    }
+                                    if (MPVEnd === 'kg') {
+                                        setMPVEndValue(String(kg))
+                                    }
+                                    if (MPVEnd === 'oz') {
+                                        setMPVEndValue(String(baseline / 28.35))
+                                    }
+                                    if (MPVEnd === 'lb') {
+                                        setMPVEndValue(String(baseline / 453.592))
+                                    }
+
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
+                    </View>
 
                 <View style={{ marginBottom: 20 }}>
                     <Text fontWeight='medium' style={{ fontSize: 19, textAlign: "center" }}>to</Text>
                 </View>
 
-                <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                        placeholder="Converted value"
-                        keyboardType="numeric"
-                        value={MPVEndValue}
-                        onChangeText={(val) => {
-                            setMPVEndValue(val)
-                            let baseline
-                            if (['mg', 'g', 'kg'].includes(MPVEnd)) {
-                                if (MPVEnd === 'mg') {
-                                    baseline = val / 1000
-                                }
-                                if (MPVEnd === 'g') {
-                                    baseline = val
-                                }
-                                if (MPVEnd === 'kg') {
-                                    baseline = val * 1000
-                                }
-                            }
-                            else {
-                                if (MPVEnd === 'oz') {
-                                    baseline = val * 28.35
-                                }
-                                if (MPVEnd === 'lb') {
-                                    baseline = val * 453.592
-                                }
-                            }
+                    <View style={{ flex: 1 }}>
+                        <View style={{ marginBottom: 20 }}>
+                            <Picker
+                                items={massItems}
+                                value={MPVEnd}
+                                placeholder="Select a Unit"
+                                onValueChange={(val) => {
+                                    setMPVEnd(val)
+                                    let baseline
+                                    if (MPVStart === 'mg') {
+                                        baseline = MPVStartValue / 1000
+                                    }
+                                    if (MPVStart === 'g') {
+                                        baseline = MPVStartValue
+                                    }
+                                    if (MPVStart === 'kg') {
+                                        baseline = MPVStartValue * 1000
+                                    }
 
-                            let mg = baseline * 1000
-                            let g = baseline
-                            let kg = baseline / 1000
-                            let oz = baseline / 28.35
-                            let lb = baseline / 453.592
+                                    if (MPVStart === 'oz') {
+                                        baseline = val * 28.35
+                                    }
+                                    if (MPVStart === 'lb') {
+                                        baseline = val * 453.592
+                                    }
+                                    
 
-                            if (MPVStart === 'mg') {
-                                setMPVStartValue(String(mg))
-                            }
-                            if (MPVStart === 'g') {
-                                setMPVStartValue(String(g))
-                            }
-                            if (MPVStart === 'kg') {
-                                setMPVStartValue(String(kg))
-                            }
-                            if (MPVStart === 'oz') {
-                                setMPVStartValue(String(baseline / 28.35))
-                            }
-                            if (MPVStart === 'lb') {
-                                setMPVStartValue(String(baseline / 453.592))
-                            }
+                                    let mg = baseline * 1000
+                                    let g = baseline
+                                    let kg = baseline / 1000
+                                    let oz = baseline / 28.35
+                                    let lb = baseline / 453.592
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
-                <View style={{ marginBottom: 20 }}>
-                    <Picker
-                        items={massItems}
-                        value={MPVEnd}
-                        placeholder="Select a Unit"
-                        onValueChange={(val) => {
-                            setMPVEnd(val)
-                            let baseline
-                            if (['mg', 'g', 'kg'].includes(val)) {
-                                if (val === 'mg') {
-                                    baseline = MPVEndValue / 1000
-                                }
-                                if (val === 'g') {
-                                    baseline = MPVEndValue
-                                }
-                                if (val === 'kg') {
-                                    baseline = MPVEndValue * 1000
-                                }
-                            }
-                            else {
-                                if (MPVEnd === 'oz') {
-                                    baseline = val * 28.35
-                                }
-                                if (MPVEnd === 'lb') {
-                                    baseline = val * 453.592
-                                }
-                            }
+                                    if (val === 'mg') {
+                                        setMPVEndValue(String(mg))
+                                    }
+                                    if (val === 'g') {
+                                        setMPVEndValue(String(g))
+                                    }
+                                    if (val === 'kg') {
+                                        setMPVEndValue(String(kg))
+                                    }
+                                    if (val === 'oz') {
+                                        setMPVEndValue(String(oz))
+                                    }
+                                    if (val === 'lb') {
+                                        setMPVEndValue(String(lb))
+                                    }
 
-                            let mg = baseline * 1000
-                            let g = baseline
-                            let kg = baseline / 1000
-                            let oz = baseline / 28.35
-                            let lb = baseline / 453.592
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
 
-                            if (MPVStart === 'mg') {
-                                setMPVStartValue(String(mg))
-                            }
-                            if (MPVStart === 'g') {
-                                setMPVStartValue(String(g))
-                            }
-                            if (MPVStart === 'kg') {
-                                setMPVStartValue(String(kg))
-                            }
-                            if (MPVStart === 'oz') {
-                                setMPVStartValue(String(oz))
-                            }
-                            if (MPVStart === 'lb') {
-                                setMPVStartValue(String(lb))
-                            }
+                        <View>
+                            <TextInput
+                                placeholder="Converted value"
+                                keyboardType="numeric"
+                                value={MPVEndValue}
+                                onChangeText={(val) => {
+                                    setMPVEndValue(val)
+                                    let baseline
+                                    if (['mg', 'g', 'kg'].includes(MPVEnd)) {
+                                        if (MPVEnd === 'mg') {
+                                            baseline = val / 1000
+                                        }
+                                        if (MPVEnd === 'g') {
+                                            baseline = val
+                                        }
+                                        if (MPVEnd === 'kg') {
+                                            baseline = val * 1000
+                                        }
+                                    }
+                                    else {
+                                        if (MPVEnd === 'oz') {
+                                            baseline = val * 28.35
+                                        }
+                                        if (MPVEnd === 'lb') {
+                                            baseline = val * 453.592
+                                        }
+                                    }
 
-                            forceUpdate()
-                        }}
-                    />
+                                    let mg = baseline * 1000
+                                    let g = baseline
+                                    let kg = baseline / 1000
+                                    let oz = baseline / 28.35
+                                    let lb = baseline / 453.592
+
+                                    if (MPVStart === 'mg') {
+                                        setMPVStartValue(String(mg))
+                                    }
+                                    if (MPVStart === 'g') {
+                                        setMPVStartValue(String(g))
+                                    }
+                                    if (MPVStart === 'kg') {
+                                        setMPVStartValue(String(kg))
+                                    }
+                                    if (MPVStart === 'oz') {
+                                        setMPVStartValue(String(baseline / 28.35))
+                                    }
+                                    if (MPVStart === 'lb') {
+                                        setMPVStartValue(String(baseline / 453.592))
+                                    }
+
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
+                    </View>
                 </View>
             </SectionContent>
         </Section>
@@ -316,126 +320,134 @@ export default function UnitConversion () {
                 <View style={{ marginBottom: 20 }}>
                     <Text size="h3" fontWeight='medium' style={{ textAlign: "center" }}>Temperature</Text>
                 </View>
-                <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                        placeholder="Starting value"
-                        keyboardType="numeric"
-                        defaultValue={TPVStartValue}
-                        onChangeText={(val) => {
-                            setTPVStartValue(val)
-                            let baseline
-                            if (TPVStart == "f") {
-                                baseline = (val - 32) * 5 / 9
-                            }
-                            else {
-                                baseline = val
-                            }
+                <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20, alignItems: "center", width: "100%", gap: 16 }}>
+                    <View style={{ flex: 1 }}>
+                    <View style={{ marginBottom: 20 }}>
+                            <Picker
+                                items={tempItems}
+                                value={TPVStart}
+                                placeholder="Select a Unit"
+                                onValueChange={(val) => {
+                                    setTPVStart(val)
+                                    let baseline
+                                    if (TPVEnd == "f") {
+                                        baseline = (TPVEndValue - 32) * 5 / 9
+                                    }
+                                    else {
+                                        baseline = TPVEndValue
+                                    }
 
-                            let c = baseline
-                            let f = baseline * 9 / 5 + 32
+                                    let c = baseline
+                                    let f = baseline * 9 / 5 + 32
 
-                            if (TPVEnd === 'f') {
-                                setTPVEndValue(String(f))
-                            }
-                            if (TPVEnd === 'c') {
-                                setTPVEndValue(String(c))
-                            }
+                                    if (val === 'f') {
+                                        setTPVStartValue(String(f))
+                                    }
+                                    if (val === 'c') {
+                                        setTPVStartValue(String(c))
+                                    }
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
-                <View style={{ marginBottom: 20 }}>
-                    <Picker
-                        items={tempItems}
-                        value={TPVStart}
-                        placeholder="Select a Unit"
-                        onValueChange={(val) => {
-                            setTPVStart(val)
-                            let baseline
-                            if (val == "f") {
-                                baseline = (TPVStartValue - 32) * 5 / 9
-                            }
-                            else {
-                                baseline = TPVStartValue
-                            }
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
 
-                            let c = baseline
-                            let f = baseline * 9 / 5 + 32
+                        <View>
+                            <TextInput
+                                placeholder="Starting value"
+                                keyboardType="numeric"
+                                defaultValue={TPVStartValue}
+                                onChangeText={(val) => {
+                                    setTPVStartValue(val)
+                                    let baseline
+                                    if (TPVStart == "f") {
+                                        baseline = (val - 32) * 5 / 9
+                                    }
+                                    else {
+                                        baseline = val
+                                    }
 
-                            if (TPVEnd === 'f') {
-                                setTPVEndValue(String(f))
-                            }
-                            if (TPVEnd === 'c') {
-                                setTPVEndValue(String(c))
-                            }
+                                    let c = baseline
+                                    let f = baseline * 9 / 5 + 32
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
+                                    if (TPVEnd === 'f') {
+                                        setTPVEndValue(String(f))
+                                    }
+                                    if (TPVEnd === 'c') {
+                                        setTPVEndValue(String(c))
+                                    }
 
-                <View style={{ marginBottom: 20 }}>
-                    <Text fontWeight='medium' style={{ fontSize: 19, textAlign: "center" }}>to</Text>
-                </View>
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
+                    </View>
 
-                <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                        placeholder="Converted value"
-                        keyboardType="numeric"
-                        value={TPVEndValue}
-                        onChangeText={(val) => {
-                            setTPVEndValue(val)
-                            let baseline
-                            if (TPVEnd == "f") {
-                                baseline = (val - 32) * 5 / 9
-                            }
-                            else {
-                                baseline = val
-                            }
+                    <View style={{ marginBottom: 20 }}>
+                        <Text fontWeight='medium' style={{ fontSize: 19, textAlign: "center" }}>to</Text>
+                    </View>
 
-                            let c = baseline
-                            let f = baseline * 9 / 5 + 32
+                    <View style={{ flex: 1 }}>
+                        <View style={{ marginBottom: 20 }}>
+                            <Picker
+                                items={tempItems}
+                                value={TPVEnd}
+                                placeholder="Select a Unit"
+                                onValueChange={(val) => {
+                                    setTPVEnd(val)
+                                    let baseline
+                                    if (TPVStart == "f") {
+                                        baseline = (TPVStartValue - 32) * 5 / 9
+                                    }
+                                    else {
+                                        baseline = TPVStartValue
+                                    }
 
-                            if (TPVStart === 'f') {
-                                setTPVStartValue(String(f))
-                            }
-                            if (TPVStart === 'c') {
-                                setTPVStartValue(String(c))
-                            }
+                                    let c = baseline
+                                    let f = baseline * 9 / 5 + 32
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
-                <View style={{ marginBottom: 20 }}>
-                    <Picker
-                        items={tempItems}
-                        value={TPVEnd}
-                        placeholder="Select a Unit"
-                        onValueChange={(val) => {
-                            setTPVEnd(val)
-                            let baseline
-                            if (val == "f") {
-                                baseline = (TPVEndValue - 32) * 5 / 9
-                            }
-                            else {
-                                baseline = TPVEndValue
-                            }
+                                    if (val === 'f') {
+                                        setTPVEndValue(String(f))
+                                    }
+                                    if (val === 'c') {
+                                        setTPVEndValue(String(c))
+                                    }
 
-                            let c = baseline
-                            let f = baseline * 9 / 5 + 32
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
 
-                            if (TPVStart === 'f') {
-                                setTPVStartValue(String(f))
-                            }
-                            if (TPVStart === 'c') {
-                                setTPVStartValue(String(c))
-                            }
+                        <View>
+                            <TextInput
+                                placeholder="Converted value"
+                                keyboardType="numeric"
+                                value={TPVEndValue}
+                                onChangeText={(val) => {
+                                    setTPVEndValue(val)
+                                    let baseline
+                                    if (TPVEnd == "f") {
+                                        baseline = (val - 32) * 5 / 9
+                                    }
+                                    else {
+                                        baseline = val
+                                    }
 
-                            forceUpdate()
-                        }}
-                    />
+                                    let c = baseline
+                                    let f = baseline * 9 / 5 + 32
+
+                                    if (TPVStart === 'f') {
+                                        setTPVStartValue(String(f))
+                                    }
+                                    if (TPVStart === 'c') {
+                                        setTPVStartValue(String(c))
+                                    }
+
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
+                    </View>
                 </View>
             </SectionContent>
         </Section>

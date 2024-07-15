@@ -13,6 +13,7 @@ import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Storage, Functions } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
 import PTRView from 'react-native-pull-to-refresh';
+import RNRestart from 'react-native-restart';
 
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -153,7 +154,7 @@ function Recipes() {
       <Layout>
         <PTRView onRefresh={() => {
           updateData()
-          forceUpdate()
+          RNRestart.restart();
         }} >
         <TopNav
           leftContent={
@@ -258,7 +259,7 @@ function Recipes() {
                   leftContent={
                     <Ionicons name="add-circle-outline" size={20} color={themeColor.white} />
                   }
-                  text="Create Recipe"
+                  text="Create"
                   status="primary"
                   type="TouchableOpacity"
                   onPress={() => navigation.navigate("Create Recipe")}
@@ -268,10 +269,11 @@ function Recipes() {
                   leftContent={
                     <Ionicons name="arrow-forward" size={20} color={themeColor.white} />
                   }
-                  text="Search Recipes Online"
+                  text="Search Online"
                   type="TouchableOpacity"
                   status='primary'
                   onPress={() => navigation.navigate("Search Recipes")}
+                  style={{ flex: 1 }}
                 />
               </View>
 

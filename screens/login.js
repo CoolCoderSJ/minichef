@@ -11,6 +11,7 @@ import {
 } from "react-native-rapi-ui";
 import { Client, Account, ID, Databases, Query, Permission, Role } from 'react-native-appwrite';
 import Dialog from "react-native-dialog";
+import RNRestart from 'react-native-restart';
 
 // Disable warnings that aren't important
 console.disableYellowBox = true;
@@ -119,7 +120,7 @@ export default Login = () => {
       console.log("DETAILS", details)
       setPlain("login", details['$id'])
       setLoading(false)
-      navigation.navigate('app')
+      RNRestart.restart();
     }
     catch (err) {
       setLoading(false)
@@ -204,6 +205,9 @@ export default Login = () => {
                 placeholder="Enter an email address"
                 onChangeText={(value) => setData({ ...formData, username: value })}
                 keyboardType="email-address"
+                inputMode="email"
+                textContentType="emailAddress"
+                autoComplete="email"
               />
             </View>
             <View style={{ marginBottom: 20 }}>
