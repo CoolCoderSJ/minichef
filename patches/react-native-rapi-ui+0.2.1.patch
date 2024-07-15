@@ -1,0 +1,18 @@
+diff --git a/node_modules/react-native-rapi-ui/components/Picker/Picker.tsx b/node_modules/react-native-rapi-ui/components/Picker/Picker.tsx
+index da6f20e..5081197 100644
+--- a/node_modules/react-native-rapi-ui/components/Picker/Picker.tsx
++++ b/node_modules/react-native-rapi-ui/components/Picker/Picker.tsx
+@@ -171,12 +171,11 @@ const Picker: React.FC<Props> = ({
+                   height: 20,
+                   width: 20,
+                   borderRadius: 4,
+-                  backgroundColor: selectedCloseIconColor,
+                   alignItems: "center",
+                   justifyContent: "center",
+                 }}
+               >
+-                <Ionicons name="ios-close" size={20} color="#fff" />
++                <Ionicons name="close-circle" size={20} color="#fff" />
+               </TouchableOpacity>
+             </View>
+             <ScrollView showsVerticalScrollIndicator={false}>

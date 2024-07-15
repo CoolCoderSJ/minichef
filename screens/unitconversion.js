@@ -457,178 +457,187 @@ export default function UnitConversion () {
                 <View style={{ marginBottom: 20 }}>
                     <Text size="h3" fontWeight='medium' style={{ textAlign: "center" }}>Volume</Text>
                 </View>
-                <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                        placeholder="Starting value"
-                        keyboardType="numeric"
-                        defaultValue={VPVStartValue}
-                        onChangeText={(val) => {
-                            setVPVStartValue(val)
-                            let baseline
-                            if (VPVStart == "l") baseline = val
-                            if (VPVStart == "ml") baseline = val / 1000
-                            if (VPVStart == "gal") baseline = val * 3.78541
-                            if (VPVStart == "qt") baseline = val * 0.946353
-                            if (VPVStart == "pt") baseline = val * 0.473176
-                            if (VPVStart == "cup") baseline = val * 0.236588
-                            if (VPVStart == "fl oz") baseline = val * 0.0295735
-                            if (VPVStart == "tbsp") baseline = val * 0.0147868
-                            if (VPVStart == "tsp") baseline = val * 0.00492892
 
-                            let l = baseline
-                            let ml = baseline * 1000
-                            let gal = baseline / 3.78541
-                            let qt = baseline / 0.946353
-                            let pt = baseline / 0.473176
-                            let cup = baseline / 0.236588
-                            let fl_oz = baseline / 0.0295735
-                            let tbsp = baseline / 0.0147868
-                            let tsp = baseline / 0.00492892
+                <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20, alignItems: "center", width: "100%", gap: 16 }}>
+                    <View style={{ flex: 1 }}>
+                        <View style={{ marginBottom: 20 }}>
+                            <Picker
+                                items={volumeItems}
+                                value={VPVStart}
+                                placeholder="Select a Unit"
+                                onValueChange={(val) => {
+                                    setVPVStart(val)
+                                    let baseline
+                                    if (VPVEnd == "l") baseline = VPVEndValue
+                                    if (VPVEnd == "ml") baseline = VPVEndValue / 1000
+                                    if (VPVEnd == "gal") baseline = VPVEndValue * 3.78541
+                                    if (VPVEnd == "qt") baseline = VPVEndValue * 0.946353
+                                    if (VPVEnd == "pt") baseline = VPVEndValue * 0.473176
+                                    if (VPVEnd == "cup") baseline = VPVEndValue * 0.236588
+                                    if (VPVEnd == "fl oz") baseline = VPVEndValue * 0.0295735
+                                    if (VPVEnd == "tbsp") baseline = VPVEndValue * 0.0147868
+                                    if (VPVEnd == "tsp") baseline = VPVEndValue * 0.00492892
 
-                            if (VPVEnd === 'l') setVPVEndValue(String(l))
-                            if (VPVEnd === 'ml') setVPVEndValue(String(ml))
-                            if (VPVEnd === 'gal') setVPVEndValue(String(gal))
-                            if (VPVEnd === 'qt') setVPVEndValue(String(qt))
-                            if (VPVEnd === 'pt') setVPVEndValue(String(pt))
-                            if (VPVEnd === 'cup') setVPVEndValue(String(cup))
-                            if (VPVEnd === 'fl oz') setVPVEndValue(String(fl_oz))
-                            if (VPVEnd === 'tbsp') setVPVEndValue(String(tbsp))
-                            if (VPVEnd === 'tsp') setVPVEndValue(String(tsp))
+                                    let l = baseline
+                                    let ml = baseline * 1000
+                                    let gal = baseline / 3.78541
+                                    let qt = baseline / 0.946353
+                                    let pt = baseline / 0.473176
+                                    let cup = baseline / 0.236588
+                                    let fl_oz = baseline / 0.0295735
+                                    let tbsp = baseline / 0.0147868
+                                    let tsp = baseline / 0.00492892
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
-                <View style={{ marginBottom: 20 }}>
-                    <Picker
-                        items={volumeItems}
-                        value={VPVStart}
-                        placeholder="Select a Unit"
-                        onValueChange={(val) => {
-                            setVPVStart(val)
-                            let baseline
-                            if (val == "l") baseline = VPVStartValue
-                            if (val == "ml") baseline = VPVStartValue / 1000
-                            if (val == "gal") baseline = VPVStartValue * 3.78541
-                            if (val == "qt") baseline = VPVStartValue * 0.946353
-                            if (val == "pt") baseline = VPVStartValue * 0.473176
-                            if (val == "cup") baseline = VPVStartValue * 0.236588
-                            if (val == "fl oz") baseline = VPVStartValue * 0.0295735
-                            if (val == "tbsp") baseline = VPVStartValue * 0.0147868
-                            if (val == "tsp") baseline = VPVStartValue * 0.00492892
+                                    if (val === 'l') setVPVStartValue(String(l))
+                                    if (val === 'ml') setVPVStartValue(String(ml))
+                                    if (val === 'gal') setVPVStartValue(String(gal))
+                                    if (val === 'qt') setVPVStartValue(String(qt))
+                                    if (val === 'pt') setVPVStartValue(String(pt))
+                                    if (val === 'cup') setVPVStartValue(String(cup))
+                                    if (val === 'fl oz') setVPVStartValue(String(fl_oz))
+                                    if (val === 'tbsp') setVPVStartValue(String(tbsp))
+                                    if (val === 'tsp') setVPVStartValue(String(tsp))
 
-                            let l = baseline
-                            let ml = baseline * 1000
-                            let gal = baseline / 3.78541
-                            let qt = baseline / 0.946353
-                            let pt = baseline / 0.473176
-                            let cup = baseline / 0.236588
-                            let fl_oz = baseline / 0.0295735
-                            let tbsp = baseline / 0.0147868
-                            let tsp = baseline / 0.00492892
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
 
-                            if (VPVEnd === 'l') setVPVEndValue(String(l))
-                            if (VPVEnd === 'ml') setVPVEndValue(String(ml))
-                            if (VPVEnd === 'gal') setVPVEndValue(String(gal))
-                            if (VPVEnd === 'qt') setVPVEndValue(String(qt))
-                            if (VPVEnd === 'pt') setVPVEndValue(String(pt))
-                            if (VPVEnd === 'cup') setVPVEndValue(String(cup))
-                            if (VPVEnd === 'fl oz') setVPVEndValue(String(fl_oz))
-                            if (VPVEnd === 'tbsp') setVPVEndValue(String(tbsp))
-                            if (VPVEnd === 'tsp') setVPVEndValue(String(tsp))
+                        <View>
+                            <TextInput
+                                placeholder="Starting value"
+                                keyboardType="numeric"
+                                defaultValue={VPVStartValue}
+                                onChangeText={(val) => {
+                                    setVPVStartValue(val)
+                                    let baseline
+                                    if (VPVStart == "l") baseline = val
+                                    if (VPVStart == "ml") baseline = val / 1000
+                                    if (VPVStart == "gal") baseline = val * 3.78541
+                                    if (VPVStart == "qt") baseline = val * 0.946353
+                                    if (VPVStart == "pt") baseline = val * 0.473176
+                                    if (VPVStart == "cup") baseline = val * 0.236588
+                                    if (VPVStart == "fl oz") baseline = val * 0.0295735
+                                    if (VPVStart == "tbsp") baseline = val * 0.0147868
+                                    if (VPVStart == "tsp") baseline = val * 0.00492892
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
+                                    let l = baseline
+                                    let ml = baseline * 1000
+                                    let gal = baseline / 3.78541
+                                    let qt = baseline / 0.946353
+                                    let pt = baseline / 0.473176
+                                    let cup = baseline / 0.236588
+                                    let fl_oz = baseline / 0.0295735
+                                    let tbsp = baseline / 0.0147868
+                                    let tsp = baseline / 0.00492892
 
-                <View style={{ marginBottom: 20 }}>
-                    <Text fontWeight='medium' style={{ fontSize: 19, textAlign: "center" }}>to</Text>
-                </View>
+                                    if (VPVEnd === 'l') setVPVEndValue(String(l))
+                                    if (VPVEnd === 'ml') setVPVEndValue(String(ml))
+                                    if (VPVEnd === 'gal') setVPVEndValue(String(gal))
+                                    if (VPVEnd === 'qt') setVPVEndValue(String(qt))
+                                    if (VPVEnd === 'pt') setVPVEndValue(String(pt))
+                                    if (VPVEnd === 'cup') setVPVEndValue(String(cup))
+                                    if (VPVEnd === 'fl oz') setVPVEndValue(String(fl_oz))
+                                    if (VPVEnd === 'tbsp') setVPVEndValue(String(tbsp))
+                                    if (VPVEnd === 'tsp') setVPVEndValue(String(tsp))
 
-                <View style={{ marginBottom: 20 }}>
-                    <TextInput
-                        placeholder="Converted value"
-                        keyboardType="numeric"
-                        value={VPVEndValue}
-                        onChangeText={(val) => {
-                            setVPVEndValue(val)
-                            let baseline
-                            if (VPVEnd == "l") baseline = val
-                            if (VPVEnd == "ml") baseline = val / 1000
-                            if (VPVEnd == "gal") baseline = val * 3.78541
-                            if (VPVEnd == "qt") baseline = val * 0.946353
-                            if (VPVEnd == "pt") baseline = val * 0.473176
-                            if (VPVEnd == "cup") baseline = val * 0.236588
-                            if (VPVEnd == "fl oz") baseline = val * 0.0295735
-                            if (VPVEnd == "tbsp") baseline = val * 0.0147868
-                            if (VPVEnd == "tsp") baseline = val * 0.00492892
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
+                    </View>
 
-                            let l = baseline
-                            let ml = baseline * 1000
-                            let gal = baseline / 3.78541
-                            let qt = baseline / 0.946353
-                            let pt = baseline / 0.473176
-                            let cup = baseline / 0.236588
-                            let fl_oz = baseline / 0.0295735
-                            let tbsp = baseline / 0.0147868
-                            let tsp = baseline / 0.00492892
+                    <View style={{ marginBottom: 20 }}>
+                        <Text fontWeight='medium' style={{ fontSize: 19, textAlign: "center" }}>to</Text>
+                    </View>
 
-                            if (VPVStart === 'l') setVPVStartValue(String(l))
-                            if (VPVStart === 'ml') setVPVStartValue(String(ml))
-                            if (VPVStart === 'gal') setVPVStartValue(String(gal))
-                            if (VPVStart === 'qt') setVPVStartValue(String(qt))
-                            if (VPVStart === 'pt') setVPVStartValue(String(pt))
-                            if (VPVStart === 'cup') setVPVStartValue(String(cup))
-                            if (VPVStart === 'fl oz') setVPVStartValue(String(fl_oz))
-                            if (VPVStart === 'tbsp') setVPVStartValue(String(tbsp))
-                            if (VPVStart === 'tsp') setVPVStartValue(String(tsp))
+                    <View style={{ flex: 1 }}>
+                        <View style={{ marginBottom: 20 }}>
+                            <Picker
+                                items={volumeItems}
+                                value={VPVEnd}
+                                placeholder="Select a Unit"
+                                onValueChange={(val) => {
+                                    setVPVEnd(val)
+                                    let baseline
+                                    if (VPVStart == "l") baseline = VPVStartValue
+                                    if (VPVStart == "ml") baseline = VPVStartValue / 1000
+                                    if (VPVStart == "gal") baseline = VPVStartValue * 3.78541
+                                    if (VPVStart == "qt") baseline = VPVStartValue * 0.946353
+                                    if (VPVStart == "pt") baseline = VPVStartValue * 0.473176
+                                    if (VPVStart == "cup") baseline = VPVStartValue * 0.236588
+                                    if (VPVStart == "fl oz") baseline = VPVStartValue * 0.0295735
+                                    if (VPVStart == "tbsp") baseline = VPVStartValue * 0.0147868
+                                    if (VPVStart == "tsp") baseline = VPVStartValue * 0.00492892
 
-                            forceUpdate()
-                        }}
-                    />
-                </View>
-                <View style={{ marginBottom: 20 }}>
-                    <Picker
-                        items={volumeItems}
-                        value={VPVEnd}
-                        placeholder="Select a Unit"
-                        onValueChange={(val) => {
-                            setVPVEnd(val)
-                            let baseline
-                            if (val == "l") baseline = VPVEndValue
-                            if (val == "ml") baseline = VPVEndValue / 1000
-                            if (val == "gal") baseline = VPVEndValue * 3.78541
-                            if (val == "qt") baseline = VPVEndValue * 0.946353
-                            if (val == "pt") baseline = VPVEndValue * 0.473176
-                            if (val == "cup") baseline = VPVEndValue * 0.236588
-                            if (val == "fl oz") baseline = VPVEndValue * 0.0295735
-                            if (val == "tbsp") baseline = VPVEndValue * 0.0147868
-                            if (val == "tsp") baseline = VPVEndValue * 0.00492892
+                                    let l = baseline
+                                    let ml = baseline * 1000
+                                    let gal = baseline / 3.78541
+                                    let qt = baseline / 0.946353
+                                    let pt = baseline / 0.473176
+                                    let cup = baseline / 0.236588
+                                    let fl_oz = baseline / 0.0295735
+                                    let tbsp = baseline / 0.0147868
+                                    let tsp = baseline / 0.00492892
 
-                            let l = baseline
-                            let ml = baseline * 1000
-                            let gal = baseline / 3.78541
-                            let qt = baseline / 0.946353
-                            let pt = baseline / 0.473176
-                            let cup = baseline / 0.236588
-                            let fl_oz = baseline / 0.0295735
-                            let tbsp = baseline / 0.0147868
-                            let tsp = baseline / 0.00492892
+                                    if (val === 'l') setVPVEndValue(String(l))
+                                    if (val === 'ml') setVPVEndValue(String(ml))
+                                    if (val === 'gal') setVPVEndValue(String(gal))
+                                    if (val === 'qt') setVPVEndValue(String(qt))
+                                    if (val === 'pt') setVPVEndValue(String(pt))
+                                    if (val === 'cup') setVPVEndValue(String(cup))
+                                    if (val === 'fl oz') setVPVEndValue(String(fl_oz))
+                                    if (val === 'tbsp') setVPVEndValue(String(tbsp))
+                                    if (val === 'tsp') setVPVEndValue(String(tsp))
 
-                            if (VPVStart === 'l') setVPVStartValue(String(l))
-                            if (VPVStart === 'ml') setVPVStartValue(String(ml))
-                            if (VPVStart === 'gal') setVPVStartValue(String(gal))
-                            if (VPVStart === 'qt') setVPVStartValue(String(qt))
-                            if (VPVStart === 'pt') setVPVStartValue(String(pt))
-                            if (VPVStart === 'cup') setVPVStartValue(String(cup))
-                            if (VPVStart === 'fl oz') setVPVStartValue(String(fl_oz))
-                            if (VPVStart === 'tbsp') setVPVStartValue(String(tbsp))
-                            if (VPVStart === 'tsp') setVPVStartValue(String(tsp))
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
 
-                            forceUpdate()
-                        }}
-                    />
+                        <View>
+                            <TextInput
+                                placeholder="Converted value"
+                                keyboardType="numeric"
+                                value={VPVEndValue}
+                                onChangeText={(val) => {
+                                    setVPVEndValue(val)
+                                    let baseline
+                                    if (VPVEnd == "l") baseline = val
+                                    if (VPVEnd == "ml") baseline = val / 1000
+                                    if (VPVEnd == "gal") baseline = val * 3.78541
+                                    if (VPVEnd == "qt") baseline = val * 0.946353
+                                    if (VPVEnd == "pt") baseline = val * 0.473176
+                                    if (VPVEnd == "cup") baseline = val * 0.236588
+                                    if (VPVEnd == "fl oz") baseline = val * 0.0295735
+                                    if (VPVEnd == "tbsp") baseline = val * 0.0147868
+                                    if (VPVEnd == "tsp") baseline = val * 0.00492892
+
+                                    let l = baseline
+                                    let ml = baseline * 1000
+                                    let gal = baseline / 3.78541
+                                    let qt = baseline / 0.946353
+                                    let pt = baseline / 0.473176
+                                    let cup = baseline / 0.236588
+                                    let fl_oz = baseline / 0.0295735
+                                    let tbsp = baseline / 0.0147868
+                                    let tsp = baseline / 0.00492892
+
+                                    if (VPVStart === 'l') setVPVStartValue(String(l))
+                                    if (VPVStart === 'ml') setVPVStartValue(String(ml))
+                                    if (VPVStart === 'gal') setVPVStartValue(String(gal))
+                                    if (VPVStart === 'qt') setVPVStartValue(String(qt))
+                                    if (VPVStart === 'pt') setVPVStartValue(String(pt))
+                                    if (VPVStart === 'cup') setVPVStartValue(String(cup))
+                                    if (VPVStart === 'fl oz') setVPVStartValue(String(fl_oz))
+                                    if (VPVStart === 'tbsp') setVPVStartValue(String(tbsp))
+                                    if (VPVStart === 'tsp') setVPVStartValue(String(tsp))
+
+                                    forceUpdate()
+                                }}
+                            />
+                        </View>
+                    </View>
                 </View>
             </SectionContent>
         </Section>
