@@ -234,7 +234,7 @@ export default function SearchRecipes () {
                                             type: 'success',
                                             text1: 'Recipe saved!',
                                         })
-                                        navigation.goBack()
+                                        navigation.navigate("AllRecipes")
                                     }}
                                 />
                             </View>

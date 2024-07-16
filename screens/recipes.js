@@ -126,7 +126,15 @@ function Recipes() {
   };
 
   React.useEffect(() => {
-    updateData();
+    Toast.show({
+      type: 'info',
+      text1: 'Loading...',
+    })
+
+    updateData().then(() => {
+      Toast.hide()
+      forceUpdate()
+    })
   }, [])
 
   React.useEffect(() => {

@@ -485,7 +485,8 @@ export default function CreateRecipe () {
                             <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}> 
 
                             <View style={{ marginVertical: 20, flex: 1 }}>
-                                <TextInput
+                                <Autocomplete
+                                data={[]}
                                 placeholder="Amount"
                                 onChangeText={e => {
                                     handleChange(idx, "serving_amt", Number(e))

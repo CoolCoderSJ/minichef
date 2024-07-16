@@ -92,6 +92,19 @@ let sliderData = [
     ],
   ]
 
+const styles = StyleSheet.create({
+    input: {
+        height: 50,
+        color: "white",
+        backgroundColor: "#262834",
+        borderColor: "#60647e",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 20,
+        fontFamily: "Ubuntu_400Regular"
+      },
+})
+
 get("login").then(res => userId = res)
 .then(() => {
     db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
@@ -372,14 +385,14 @@ export default function CreateGrocery ({ navigation, route }) {
                         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}> 
 
                             <View style={{ marginVertical: 20, flex: 1 }}>
-                                <TextInput
-                                placeholder="Amt"
-                                onChangeText={e => {
-                                    updateFood(idx, id, e, "amount");
-                                }}
-                                defaultValue={String(item.amount).replace("undefined", "")}
+                                <Autocomplete 
+                                data={[]} 
+                                placeholder="Amt" 
                                 keyboardType='numeric'
-                                style={{ height: 50 }}
+                                defaultValue={String(item.amount).replace("undefined", "")}
+                                onChangeText={e => {
+                                updateFood(idx, id, e, "amount")
+                                }}
                                 />
                             </View>
 

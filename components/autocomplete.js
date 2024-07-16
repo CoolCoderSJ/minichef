@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, FlatList, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const Autocomplete = ({ data, placeholder, onSelect, defaultValue, onChangeText }) => {
+const Autocomplete = ({ data, placeholder, onSelect, defaultValue, onChangeText, keyboardType }) => {
     console.log(defaultValue)
 
   const [query, setQuery] = useState('');
@@ -33,6 +33,7 @@ const Autocomplete = ({ data, placeholder, onSelect, defaultValue, onChangeText 
         onChangeText={handleInputChange}
         placeholder={placeholder}
         placeholderTextColor={"#60647e"}
+        keyboardType={keyboardType ? keyboardType : "default"}
       />
       {filteredData.length > 0 && (
         <FlatList

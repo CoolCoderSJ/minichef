@@ -15,6 +15,7 @@ import _, { set, update } from 'lodash';
 
 import Dialog from "react-native-dialog";
 import { MenuView } from '@react-native-menu/menu';
+import Autocomplete from '../../components/autocomplete';
 
 import { Fraction } from "fractional";
 import RNJsxParser from 'react-native-jsx-parser';
@@ -305,7 +306,8 @@ export default function ViewRecipe ({ navigation, route }) {
                   width: 75, gap: 8, alignSelf: "flex-start", marginLeft: 40
                 }}>
                 <Text style={{ fontSize: 22, textAlign: "center", marginRight: 15 }}><Ionicons name="people-outline" size={40} color={themeColor.white} /></Text>
-                <TextInput
+                <Autocomplete
+                  data={[]}
                   onChangeText={(value) => {
 
                     setServings(value)

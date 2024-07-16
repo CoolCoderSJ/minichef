@@ -9,7 +9,7 @@ import {
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
   Layout, Text, Button,
-  themeColor, TopNav, useTheme, Section, SectionContent
+  themeColor, useTheme, Section, SectionContent
 } from "react-native-rapi-ui";
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -47,9 +47,6 @@ function Index () {
 
   return (
       <Layout>
-        <TopNav
-          middleContent="Mini Chef"
-        />
         <ScrollView>
 
           <TouchableOpacity onPress={() => navigation.navigate("Recipes")}>

@@ -173,7 +173,7 @@ export default Login = () => {
     }
 
     {!isLoading &&
-    <Layout>
+    <View>
       <Dialog.Container visible={dialogVisible}>
         <Dialog.Title>Error</Dialog.Title>
         <Dialog.Description>
@@ -181,14 +181,9 @@ export default Login = () => {
         </Dialog.Description>
         <Dialog.Button label="OK" onPress={closeDialog} />
     </Dialog.Container>
-
-      <TopNav
-        leftAction={() => navigation.goBack()}
-        middleContent="Login"
-      />
       <ScrollView>
 
-        <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
+        <Section style={{ marginHorizontal: 20 }}>
           <SectionContent>
             <View>
               <Text>If you don't have an account, one will be made for you upon logging in.</Text>
@@ -241,7 +236,7 @@ export default Login = () => {
           </SectionContent>
         </Section>
       </ScrollView>
-    </Layout>
+    </View>
     }
     </Layout>
   );
