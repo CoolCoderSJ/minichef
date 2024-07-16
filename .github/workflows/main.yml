@@ -15,13 +15,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 18.x
-      - name: Install xcode-install
-        run: sudo gem install xcode-install
-      - uses: sinoru/actions-setup-xcode@v1.1.2
-        with:
-          xcode-version: '15.4'
-          apple-id: ${{ vars.APPLE_ID }}
-          apple-id-password: ${{ vars.APPLE_PASSWORD }}
       - name: Install deps
         run: yarn install
       - name: Patch packages
