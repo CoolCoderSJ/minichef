@@ -24,7 +24,7 @@ client = new Client();
 client
   .setEndpoint('https://appwrite.shuchir.dev/v1')
   .setProject('minichef')
-  .setPlatform('dev.shuchir.minichef');
+  .setPlatform('com.shuchir.minichef');
 
 db = new Databases(client);
 account = new Account(client);

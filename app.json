@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "dev.shuchir.minichef",
+      "bundleIdentifier": "com.shuchir.minichef",
       "buildNumber": "1",
       "entitlements": {
         "aps-environment": "development"
@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "dev.shuchir.minichef"
+      "package": "com.shuchir.minichef"
     },
     "web": {
       "favicon": "./assets/favicon.png"

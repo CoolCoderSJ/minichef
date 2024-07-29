@@ -23,7 +23,7 @@ client = new Client();
 client
   .setEndpoint('https://appwrite.shuchir.dev/v1')
   .setProject('minichef')
-  .setPlatform('dev.shuchir.minichef');
+  .setPlatform('com.shuchir.minichef');
 
 account = new Account(client);
 const functions = new Functions(client);
