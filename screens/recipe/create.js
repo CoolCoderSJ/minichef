@@ -14,6 +14,7 @@ import { Client, Databases, Query, Permission, Role, ID, Storage } from "react-n
 import Autocomplete from '../../components/autocomplete';
 import SlidePicker from "react-native-slidepicker";
 import {launchImageLibrary} from 'react-native-image-picker';
+import Dialog from "react-native-dialog";
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -39,6 +40,7 @@ let recipe = {
 };
 
 let unitBeingEdited = null;
+let customUnit = "";
 
 let sliderData = [
     [
@@ -98,6 +100,10 @@ let sliderData = [
             "label": "Pinch",
             "value": "pinch"
         },
+        {
+            "label": "Custom Unit",
+            "value": "custom"
+        }
     ],
   ]
 let stage = 1;
@@ -116,6 +122,7 @@ export default function CreateRecipe () {
   const [steps, setSteps] = React.useState([{}]);
   const [filterList, setFilterList] = React.useState([{}]);
   const [sliderVisible, setSliderVisible] = React.useState(false);
+  const [customVisible, setCustomVisible] = React.useState(false);
   const { height: screenHeight } = Dimensions.get('window');
 
 
@@ -677,6 +684,18 @@ export default function CreateRecipe () {
 
             </View>
         </ScrollView>
+
+        <Dialog.Container visible={customVisible}>
+            <Dialog.Title>Enter Custom Unit</Dialog.Title>
+            <Dialog.Input placeholder="enter custom unit here..." onChangeText={res => {customUnit = res; console.log(res)}} />
+            <Dialog.Button label="Cancel" onPress={() => setCustomVisible(false)} />
+            <Dialog.Button label="Save" onPress={() => {
+                console.log(customUnit)
+                handleChange(unitBeingEdited, "serving_unit", customUnit)
+                setCustomVisible(false)
+                forceUpdate();
+            }} />
+        </Dialog.Container>
                 
         <SlidePicker.Parallel
             visible={sliderVisible}
@@ -688,7 +707,11 @@ export default function CreateRecipe () {
             onCancelClick={() => setSliderVisible(false)}
             onConfirmClick={res => {
                 console.log(res)
-                handleChange(unitBeingEdited, "serving_unit", res[0].value)
+                if (res[0].value != "custom") handleChange(unitBeingEdited, "serving_unit", res[0].value)
+                else {
+                    customUnit = "";
+                    setCustomVisible(true)
+                }
                 setSliderVisible(false)
                 forceUpdate();
             }}

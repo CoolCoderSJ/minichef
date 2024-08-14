@@ -16,7 +16,7 @@ import _, { set, update } from 'lodash';
 import { Fraction } from "fractional";
 import { SwipeablePanel } from 'rn-swipeable-panel';
 import RNJsxParser from 'react-native-jsx-parser';
-
+import Swiper from 'react-native-deck-swiper';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -35,6 +35,7 @@ let currentRecipe = null;
 let recipes = [];
 let currentIndex = 0;
 let jsxText = "";
+let cardIndex = 0;
 
 let userId
 get("login").then(res => userId = res)
@@ -48,6 +49,8 @@ export default function Walkthrough ({ navigation, route }) {
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [servings, setServings] = React.useState(null);
   const [ingList, setIngList] = React.useState([]);
+
+  const swipeRef = React.useRef(null);
 
   const { height: screenHeight } = Dimensions.get('window');
 
@@ -112,22 +115,12 @@ export default function Walkthrough ({ navigation, route }) {
   }, []);
 
 
-  const updateJSX = (index) => {
-    let step = currentRecipe.steps[index];
-    let wordArr = step.split(' ');
-    let text = [];
-    wordArr.forEach(function(el) {
-      for (let i=0; i < ingList.length; i++) {
-        if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice", "and", "I", "at", "an"].includes(el.toLowerCase())) {
-          el = `<Text style={{ color: "#adc8ff", fontSize: 20 }} onPress={() => handlePress('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}')}>${el}</Text>`;
-          el = el
-        } 
-      }
-      text.push(el);
-    });
-    text = "<Text style={{ fontSize: 20, marginBottom: 10 }}>" + text.join('&nbsp;') + "</Text>";
-
-    jsxText = text;
+  const arrayOfNums = (num) => {
+    let arr = [];
+    for (let i=0; i < num; i++) {
+      arr.push(i)
+    }
+    return arr;
   }
 
   return (
@@ -220,7 +213,7 @@ export default function Walkthrough ({ navigation, route }) {
                     text="Next"
                     status="primary"
                     type="TouchableOpacity"
-                    onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
+                    onPress={() => { currentIndex += 1; forceUpdate() }}
                   />
                 </View>
               </>
@@ -228,27 +221,64 @@ export default function Walkthrough ({ navigation, route }) {
 
               {currentIndex > 0 &&
               <View style={{ height: "100%" }}>
-                <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 20 }}>
-                <SectionContent>
-                  <View style={{ marginBottom: 0 }}>
-                    <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold", textAlign: "center" }}>Step {currentIndex}</Text>
-                      <View style={{ marginHorizontal: 20, marginTop: 10 }}>
-                        <RNJsxParser bindings={{ 
-                          handlePress: (textToRender) => {
-                            Toast.show({
-                              type: 'info',
-                              text1: textToRender,
-                            })
+                <View style={{ flex: 1, paddingTop: 0, marginTop: 0, marginBottom: 20 }}>
+                <Swiper
+                    cards={arrayOfNums(currentRecipe.steps.length)}
+                    renderCard={(card) => {
+                      let step = currentRecipe.steps[card];
+                      let wordArr = step.split(' ');
+                      let text = [];
+                      wordArr.forEach(function(el) {
+                        for (let i=0; i < ingList.length; i++) {
+                          if (ingList[i].toLowerCase().includes(el.toLowerCase()) && !["a", "the", "of", "in", "cook", "to", "drain", "for", "all", "chop", "dice", "and", "I", "at", "an"].includes(el.toLowerCase())) {
+                            el = `<Text style={{ color: "#adc8ff", fontSize: 20 }} onPress={() => handlePress('${(new Fraction(currentRecipe.ing[i].serving_amt)).toString()} ${currentRecipe.ing[i].serving_unit} ${currentRecipe.ing[i].ing}')}>${el}</Text>`;
+                            el = el
                           } 
-                          }} 
-                          blacklistedAttrs={[]} 
-                          showWarnings={true} 
-                          components={{ Text }} 
-                          jsx={jsxText} />
-                      </View>
-                  </View>
-                </SectionContent>
-                </Section>
+                        }
+                        text.push(el);
+                      });
+                      text = "<Text style={{ fontSize: 20, marginBottom: 10 }}>" + text.join('&nbsp;') + "</Text>";
+                  
+                      jsxText = text;
+
+                        return (
+                          <Section style={{ paddingBottom: 0, marginHorizontal: 20, marginTop: 0, height: 300 }}>
+                          <SectionContent>
+                            <View style={{ marginBottom: 0 }}>
+                              <Text style={{ fontSize: 25, marginVertical: 7, fontWeight: "bold", textAlign: "center" }}>Step {card + 1}</Text>
+                                <View style={{ marginHorizontal: 20, marginTop: 10 }}>
+                                  <RNJsxParser bindings={{ 
+                                    handlePress: (textToRender) => {
+                                      Toast.show({
+                                        type: 'info',
+                                        text1: textToRender,
+                                      })
+                                    } 
+                                    }} 
+                                    blacklistedAttrs={[]} 
+                                    showWarnings={true} 
+                                    components={{ Text }} 
+                                    jsx={jsxText} />
+                                </View>
+                            </View>
+                          </SectionContent>
+                          </Section>
+                        )
+                    }}
+                    onSwiped={(cardIndex) => {console.log(cardIndex)}}
+                    cardIndex={cardIndex}
+                    backgroundColor={'transparent'}
+                    verticalSwipe={false}
+                    goBackToPreviousCardOnSwipeRight={true}
+                    showSecondCard={false}
+                    stackSize={2}
+                    swipeBackCard={true}
+                    onSwipedLeft={(cI) => {cardIndex = cI + 1; console.log(cardIndex); forceUpdate()}}
+                    onSwipedRight={(cI) => {cardIndex = cI - 1; console.log(cardIndex); forceUpdate()}}
+                    ref={swipeRef}
+                    >
+                </Swiper>
+                </View>
                 
                 <View style={{ gap: 4, flexDirection: "row", marginVertical: 20, height: "auto" }}>
                   <Button
@@ -259,10 +289,10 @@ export default function Walkthrough ({ navigation, route }) {
                     text="Back"
                     color="black100"
                     type="TouchableOpacity"
-                    onPress={() => { currentIndex -= 1; if (currentIndex > 0) updateJSX(currentIndex - 1); forceUpdate() }}
+                    onPress={() => { swipeRef.current.swipeRight(); forceUpdate() }}
                   />
 
-                  {currentIndex < currentRecipe.steps.length &&
+                  {(cardIndex < currentRecipe.steps.length - 1 && cardIndex >= 0) &&
                   <Button
                     style={{ marginVertical: 5, marginHorizontal: 20, flex: 1, width: "auto" }}
                     rightContent={
@@ -271,10 +301,12 @@ export default function Walkthrough ({ navigation, route }) {
                     text="Next"
                     status="primary"
                     type="TouchableOpacity"
-                    onPress={() => { currentIndex += 1; updateJSX(currentIndex - 1); forceUpdate() }}
+                    onPress={() => { swipeRef.current.swipeLeft(); forceUpdate() }}
                   />
                   }
                 </View>
+
+                <View style={{ flex: 1 }}></View>
 
                 <SwipeablePanel {...ingPanelProps} isActive={isPanelActive} style={{ backgroundColor: "#262834", paddingBottom: 20, flex: 1, flexGrow: 1, minHeight: screenHeight + 300, marginBottom: 50 }} scrollViewProps={{ flex: 1, flexGrow: 1 }} closeOnTouchOutside={true} noBar={true}>
                   <ScrollView contentContainerStyle={{ flexGrow: 1, minHeight: screenHeight }}>
