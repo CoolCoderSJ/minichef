@@ -123,7 +123,10 @@ export default function ViewGrocery ({ navigation, route }) {
 
           const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
           if (continueWithoutAccount) {
-            await AsyncStorage.removeItem('groceryData');
+            let localGroceryData = await AsyncStorage.getItem('groceryData');
+            localGroceryData = localGroceryData ? JSON.parse(localGroceryData) : [];
+            localGroceryData.splice(route.params.idx, 1);
+            await AsyncStorage.setItem('groceryData', JSON.stringify(localGroceryData));
             Toast.show({
               type: 'success',
               text1: 'Deleted',

@@ -153,53 +153,83 @@ export default function CreateGrocery ({ navigation, route }) {
   });
 
     React.useEffect(() => {
-    const refreshData = navigation.addListener('focus', () => {
+    const refreshData = navigation.addListener('focus', async () => {
         let fieldset = form.items
         fieldset = [{src: "Groceries", items: []}]
         setForm({...form, items: fieldset})
 
-        recipes = []
-        db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
-            console.log("ingredients", result)
-              if (result.total > 0) {
-                  mealDB = result.documents[0].items;
-                }
-          })
-          .then(() => {
-            filter = []
-          for (let i = 0; i < mealDB.length; i++) {
-            console.log(mealDB[i])
-              filter.push(mealDB[i]);
-          }
-        })
-        .then(() => {
-            console.log("filter list", filter)
-        })
-
-        db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-            if (result.total > 0) {
-                for (let i = 0; i < result.documents.length; i++) {
-                  let ing = []
-                  for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-                    ing.push({
-                      ing: result.documents[i].ingredients[j],
-                      serving_amt: result.documents[i].serving_amt[j],
-                      serving_unit: result.documents[i].serving_units[j]
+        const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+        if (continueWithoutAccount) {
+            const localRecipes = await AsyncStorage.getItem('recipeData');
+            if (localRecipes) {
+                const parsedRecipes = JSON.parse(localRecipes);
+                recipes = [];
+                for (let i = 0; i < parsedRecipes.length; i++) {
+                    let ing = [];
+                    for (let j = 0; j < parsedRecipes[i].ingredients.length; j++) {
+                        ing.push({
+                            ing: parsedRecipes[i].ingredients[j],
+                            serving_amt: parsedRecipes[i].serving_amt[j],
+                            serving_unit: parsedRecipes[i].serving_units[j]
+                        });
+                    }
+                    recipes.push({
+                        name: parsedRecipes[i].name,
+                        ing: ing,
+                        steps: parsedRecipes[i].steps,
+                        serving: parsedRecipes[i].servings,
+                        recipeId: parsedRecipes[i].recipeId
                     });
-                  }
-                  recipes.push({
-                    name: result.documents[i].name,
-                    ing: ing,
-                    steps: result.documents[i].steps,
-                    serving: result.documents[i].servings,
-                    recipeId: result.documents[i]['$id']
-                  })
-                };
-              }
-        })
-      })
-      return refreshData;
-  }, [navigation])
+                }
+            }
+            const localIngredients = await AsyncStorage.getItem('ingredients');
+            if (localIngredients) {
+                filter = JSON.parse(localIngredients);
+            }
+        } else {
+            recipes = []
+            db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
+                console.log("ingredients", result)
+                if (result.total > 0) {
+                    mealDB = result.documents[0].items;
+                }
+            })
+            .then(() => {
+                filter = []
+                for (let i = 0; i < mealDB.length; i++) {
+                    console.log(mealDB[i])
+                    filter.push(mealDB[i]);
+                }
+            })
+            .then(() => {
+                console.log("filter list", filter)
+            })
+
+            db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+                if (result.total > 0) {
+                    for (let i = 0; i < result.documents.length; i++) {
+                        let ing = []
+                        for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                            ing.push({
+                                ing: result.documents[i].ingredients[j],
+                                serving_amt: result.documents[i].serving_amt[j],
+                                serving_unit: result.documents[i].serving_units[j]
+                            });
+                        }
+                        recipes.push({
+                            name: result.documents[i].name,
+                            ing: ing,
+                            steps: result.documents[i].steps,
+                            serving: result.documents[i].servings,
+                            recipeId: result.documents[i]['$id']
+                        })
+                    };
+                }
+            })
+        }
+    })
+    return refreshData;
+}, [navigation])
 
   const updateField = (id, field, value) => {
     let fieldset = form.items
@@ -292,7 +322,10 @@ export default function CreateGrocery ({ navigation, route }) {
 
         const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
         if (continueWithoutAccount) {
-            await AsyncStorage.setItem('groceryData', JSON.stringify(data));
+            let localGroceryData = await AsyncStorage.getItem('groceryData');
+            localGroceryData = localGroceryData ? JSON.parse(localGroceryData) : [];
+            localGroceryData.push(data);
+            await AsyncStorage.setItem('groceryData', JSON.stringify(localGroceryData));
             Toast.show({
                 text1: "Success",
                 text2: "Grocery list created successfully",
