@@ -1,4 +1,3 @@
-// Import the necessary libraries
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -69,7 +68,17 @@ export default Settings = () => {
   }
 
   const deleteAccount = async () => {
-    get("login").then(res => {
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+      const keys = await AsyncStorage.getAllKeys();
+      await AsyncStorage.multiRemove(keys);
+      Toast.show({
+        type: 'success',
+        text1: 'Local data cleared successfully!'
+      });
+      navigation.navigate('login');
+    } else {
+      get("login").then(res => {
         Toast.show({
             type: 'info',
             text1: 'Deleting data...'
@@ -106,7 +115,8 @@ export default Settings = () => {
                 })
             })
         })
-    })
+      })
+    }
   }
 
 
@@ -234,7 +244,7 @@ export default Settings = () => {
               />
             </View>
           </TouchableOpacity>
-
+          
       </ScrollView>
 
       <Toast />

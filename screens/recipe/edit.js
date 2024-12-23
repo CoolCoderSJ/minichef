@@ -141,82 +141,135 @@ export default function EditRecipe ({ navigation, route }) {
   const [sliderVisible, setSliderVisible] = React.useState(false);
   const [customVisible, setCustomVisible] = React.useState(false);
 
+  const fetchLocalData = async () => {
+    const localData = await AsyncStorage.getItem('recipeData');
+    if (localData) {
+      const parsedData = JSON.parse(localData);
+      let ingredients = await AsyncStorage.getItem('ingredients');
+      if (ingredients) {
+          console.log("SETTING FILTER LIST")
+        setFilterList(JSON.parse(ingredients));
+      }
+  
+      recipes = [];
+  
+      for (let i = 0; i < parsedData.length; i++) {
+          let ing = []
+          for (let j = 0; j < parsedData[i].ingredients.length; j++) {
+            ing.push({
+              ing: parsedData[i].ingredients[j],
+              serving_amt: parsedData[i].serving_amt[j],
+              serving_unit: parsedData[i].serving_units[j]
+            });
+          }
+          recipes.push({
+            name: parsedData[i].name,
+            ing: ing,
+            steps: parsedData[i].steps,
+            serving: parsedData[i].servings,
+            recipeId: parsedData[i].recipeId, // Reference the unique ID
+            stepImages: parsedData[i].stepImages
+          })
+        };
+  
+      console.log("RECIPES", recipes)
+      console.log("HERE")
+      console.log("IDX", route.params.idx)
+      recipe = recipes[route.params.idx]
+      recipe.imageName = ""
+      imgNames = []
+      for (let i = 0; i < recipe.stepImages.length; i++) {
+          imgNames.push("")
+      }
+      setFields(recipe['ing']);
+      setSteps(recipe['steps']);
+      forceUpdate();
+    }
+  };
+
   React.useEffect(() => {
     stage = 1;
-    recipes = []
-    recipe = {}
-    db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
-        console.log("ingredients", result)
-        let mealDB = []
-        if (result.total > 0) {
-            mealDB = result.documents[0].items;
-        }
-
-        let filter = [];
-        for (let i = 0; i < mealDB.length; i++) {
-            filter.push(mealDB[i]);
-        }
-        setFilterList(filter);
-      })
+    recipes = [];
+    recipe = {};
     
-    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-        if (result.total > 0) {
-            for (let i = 0; i < result.documents.length; i++) {
-              let ing = []
-              for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-                ing.push({
-                  ing: result.documents[i].ingredients[j],
-                  serving_amt: result.documents[i].serving_amt[j],
-                  serving_unit: result.documents[i].serving_units[j]
-                });
-              }
-              recipes.push({
-                name: result.documents[i].name,
-                ing: ing,
-                steps: result.documents[i].steps,
-                serving: result.documents[i].servings,
-                recipeId: result.documents[i]['$id'],
-                imageId: result.documents[i].imageId,
-                stepImages: result.documents[i].stepImages
-              })
-            };
+    AsyncStorage.getItem('continueWithoutAccount').then((continueWithoutAccount) => {
+      if (continueWithoutAccount) {
+        console.log("Fetching local data")
+        fetchLocalData()
+      } else {
+        db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
+          console.log("ingredients", result)
+          let mealDB = []
+          if (result.total > 0) {
+              mealDB = result.documents[0].items;
           }
-    })
-    .then(() => {
-        console.log("IDX", route.params.idx)
-        recipe = recipes[route.params.idx]
-        recipe.imageName = ""
-        imgNames = []
-        for (let i = 0; i < recipe.stepImages.length; i++) {
-            imgNames.push("")
-        }
-        setFields(recipe['ing']);
-        setSteps(recipe['steps']);
-    })
-    .then(() => {
-        console.log("RECIPE", recipe)
-        if (recipe.imageId != "") {
-            storage.getFile("images", recipe.imageId).then((res) => {
-                console.log("fetched file")
-                recipe.imageName = res.name
-                forceUpdate()
-            })
-        }
-        if (recipe.image) {
-            recipe.imageName = recipe.image.name
-        }
 
-        for (let i = 0; i < recipe.stepImages.length; i++) {
-            if (recipe.stepImages[i] != "") {
-                storage.getFile("images", recipe.stepImages[i]).then((res) => {
-                    console.log("fetched file")
-                    imgNames[i] = res.name
-                    forceUpdate()
+          let filter = [];
+          for (let i = 0; i < mealDB.length; i++) {
+              filter.push(mealDB[i]);
+          }
+          setFilterList(filter);
+        })
+      
+      db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+          if (result.total > 0) {
+              for (let i = 0; i < result.documents.length; i++) {
+                let ing = []
+                for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                  ing.push({
+                    ing: result.documents[i].ingredients[j],
+                    serving_amt: result.documents[i].serving_amt[j],
+                    serving_unit: result.documents[i].serving_units[j]
+                  });
+                }
+                recipes.push({
+                  name: result.documents[i].name,
+                  ing: ing,
+                  steps: result.documents[i].steps,
+                  serving: result.documents[i].servings,
+                  recipeId: result.documents[i]['$id'],
+                  imageId: result.documents[i].imageId,
+                  stepImages: result.documents[i].stepImages
                 })
+              };
             }
-        }
-    })
+      })
+      .then(() => {
+          console.log("IDX", route.params.idx)
+          recipe = recipes[route.params.idx]
+          recipe.imageName = ""
+          imgNames = []
+          for (let i = 0; i < recipe.stepImages.length; i++) {
+              imgNames.push("")
+          }
+          setFields(recipe['ing']);
+          setSteps(recipe['steps']);
+      })
+      .then(() => {
+          console.log("RECIPE", recipe)
+          if (recipe.imageId != "") {
+              storage.getFile("images", recipe.imageId).then((res) => {
+                  console.log("fetched file")
+                  recipe.imageName = res.name
+                  forceUpdate()
+              })
+          }
+          if (recipe.image) {
+              recipe.imageName = recipe.image.name
+          }
 
+          for (let i = 0; i < recipe.stepImages.length; i++) {
+              if (recipe.stepImages[i] != "") {
+                  storage.getFile("images", recipe.stepImages[i]).then((res) => {
+                      console.log("fetched file")
+                      imgNames[i] = res.name
+                      forceUpdate()
+                  })
+              }
+          }
+      })
+      }
+    });
   }, [])
 
 
@@ -282,32 +335,40 @@ export default function EditRecipe ({ navigation, route }) {
   const updateIngredients = async () => {
     let allIng = [];
     for (let j = 0; j < recipe.ing.length; j++) {
-        allIng.push(recipe.ing[j].ing.toLowerCase())
+      allIng.push(recipe.ing[j].ing.toLowerCase());
     }
-
-    let result = await db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])])
-    if (result.total > 0) {
-      let dbing = result.documents[0].items;
+  
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+      let localIngredients = await AsyncStorage.getItem('ingredients');
+      if (localIngredients) {
+        let parsedIngredients = JSON.parse(localIngredients);
+        allIng = [...new Set([...allIng, ...parsedIngredients.map(ing => ing.toLowerCase())])];
+      }
+      await AsyncStorage.setItem('ingredients', JSON.stringify(allIng));
+    } else {
+      let result = await db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]);
+      if (result.total > 0) {
+        let dbing = result.documents[0].items;
         for (let i = 0; i < dbing.length; i++) {
-            allIng.push(dbing[i].toLowerCase())
+          allIng.push(dbing[i].toLowerCase());
         }
+      }
+  
+      allIng = [...new Set(allIng)];
+  
+      try {
+        await db.createDocument("data", "ingredients", userId, { uid: userId, items: allIng }, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ]);
+      } catch {
+        await db.updateDocument("data", "ingredients", userId, { items: allIng });
+      }
     }
-
-    allIng = [...new Set(allIng)]
-
-    try {
-      await db.createDocument("data", "ingredients", userId, {uid: userId, items: allIng}, [
-        Permission.read(Role.user(userId)),
-        Permission.write(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-      ]);
-    } 
-
-    catch {
-      await db.updateDocument("data", "ingredients", userId, {items: allIng})
-    }
-  }
+  };
 
 
   async function save () {
@@ -341,44 +402,38 @@ export default function EditRecipe ({ navigation, route }) {
         steps: recipe.steps,
         name: recipe.name,
         servings: Number(recipe.serving),
-        stepImages: []
+        stepImages: [],
+        recipeId: recipe.recipeId // Include the unique ID
     }
 
-    for (let i = 0; i < recipe.stepImages.length; i++) {
-        if (i >= recipe.steps.length) {
-            recipe.stepImages.splice(i, 1)
+
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+        let l = await AsyncStorage.getItem('recipeData');
+        if (l) {
+            let localData = JSON.parse(l);
+            localData = localData.map(r => r.recipeId === recipe.recipeId ? data : r);
+            await AsyncStorage.setItem('recipeData', JSON.stringify(localData));
+            Toast.show({
+                text1: "Success",
+                text2: "Recipe updated successfully",
+                type: "success",
+            });
+            navigation.goBack();
         }
-    }
+    } else {
+        for (let i = 0; i < recipe.stepImages.length; i++) {
+            if (i >= recipe.steps.length) {
+                recipe.stepImages.splice(i, 1)
+            }
+        }
 
-    for (let i = 0; i < recipe.stepImages.length; i++) {
-        data.stepImages.push("")
-    }
+        for (let i = 0; i < recipe.stepImages.length; i++) {
+            data.stepImages.push("")
+        }
 
-    if (recipe.image) {
-        storage.createFile("images", ID.unique(), recipe.image, [
-            Permission.read(Role.user(userId)),
-            Permission.write(Role.user(userId)),
-            Permission.update(Role.user(userId)),
-            Permission.delete(Role.user(userId)),
-        ])
-        .then(file => {
-            console.log(file)
-            data['imageId'] = file.$id
-        })
-        .catch(err => console.error(err))
-    }
-    if (!recipe.imageName) {
-        console.log("RESETTING IMAGE ID")
-        data['imageId'] = ""
-    }
-
-    console.log("DATA", data.stepImages, recipe.stepImages)
-
-    for (let i = 0; i < recipe.stepImages.length; i++) {
-        console.log("TYPE", typeof recipe.stepImages[i])
-        if (recipe.stepImages[i] && typeof recipe.stepImages[i] == "object") {
-            console.log("UPLOADING IMAGE")
-            storage.createFile("images", ID.unique(), recipe.stepImages[i], [
+        if (recipe.image) {
+            storage.createFile("images", ID.unique(), recipe.image, [
                 Permission.read(Role.user(userId)),
                 Permission.write(Role.user(userId)),
                 Permission.update(Role.user(userId)),
@@ -386,52 +441,75 @@ export default function EditRecipe ({ navigation, route }) {
             ])
             .then(file => {
                 console.log(file)
-                data.stepImages[i] = file.$id
+                data['imageId'] = file.$id
             })
             .catch(err => console.error(err))
         }
-        else if (typeof recipe.stepImages[i] == "string") {
-            data.stepImages[i] = recipe.stepImages[i]
+        if (!recipe.imageName) {
+            console.log("RESETTING IMAGE ID")
+            data['imageId'] = ""
+        }
+
+        console.log("DATA", data.stepImages, recipe.stepImages)
+
+        for (let i = 0; i < recipe.stepImages.length; i++) {
+            console.log("TYPE", typeof recipe.stepImages[i])
+            if (recipe.stepImages[i] && typeof recipe.stepImages[i] == "object") {
+                console.log("UPLOADING IMAGE")
+                storage.createFile("images", ID.unique(), recipe.stepImages[i], [
+                    Permission.read(Role.user(userId)),
+                    Permission.write(Role.user(userId)),
+                    Permission.update(Role.user(userId)),
+                    Permission.delete(Role.user(userId)),
+                ])
+                .then(file => {
+                    console.log(file)
+                    data.stepImages[i] = file.$id
+                })
+                .catch(err => console.error(err))
+            }
+            else if (typeof recipe.stepImages[i] == "string") {
+                data.stepImages[i] = recipe.stepImages[i]
+            }
+        }
+
+        console.log(countOccurrences(data.stepImages, ""), countOccurrences(recipe.stepImages, ""))
+        console.log(recipe.image, data.imageId)
+        console.log(data)
+        while ((recipe.image && data['imageId'] == undefined) || countOccurrences(data.stepImages, "") > countOccurrences(recipe.stepImages, "")) {
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        try {
+        console.log("CREATING")
+        await db.createDocument("data", "recipes", recipe.recipeId, data, [
+            Permission.read(Role.user(userId)),
+            Permission.write(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+        ]);
+
+        Toast.show({
+            type: 'success',
+            text1: 'Saved!',
+        });
+        }
+
+        catch {
+        console.log("UPDATING")
+        await db.updateDocument("data", "recipes", recipe.recipeId, data, [
+            Permission.read(Role.user(userId)),
+            Permission.write(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+        ]);
+
+        Toast.show({
+            type: 'success',
+            text1: 'Saved!',
+        });
         }
     }
-
-    console.log(countOccurrences(data.stepImages, ""), countOccurrences(recipe.stepImages, ""))
-    console.log(recipe.image, data.imageId)
-    console.log(data)
-    while ((recipe.image && data['imageId'] == undefined) || countOccurrences(data.stepImages, "") > countOccurrences(recipe.stepImages, "")) {
-        await new Promise(r => setTimeout(r, 500));
-    }
-
-    try {
-    console.log("CREATING")
-    await db.createDocument("data", "recipes", recipe.recipeId, data, [
-        Permission.read(Role.user(userId)),
-        Permission.write(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-    ]);
-
-    Toast.show({
-        type: 'success',
-        text1: 'Saved!',
-    });
-    }
-
-    catch {
-    console.log("UPDATING")
-    await db.updateDocument("data", "recipes", recipe.recipeId, data, [
-        Permission.read(Role.user(userId)),
-        Permission.write(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-    ]);
-
-    Toast.show({
-        type: 'success',
-        text1: 'Saved!',
-    });
-    }
-
   }
 
 

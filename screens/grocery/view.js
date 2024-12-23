@@ -73,7 +73,14 @@ export default function ViewGrocery ({ navigation, route }) {
 
     const updateData = async () => {
         lists = []
-        let result = await db.listDocuments("data", "grocery", [Query.equal("uid", [userId])])
+        const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+        if (continueWithoutAccount) {
+            const groceryData = await AsyncStorage.getItem('groceryData');
+            if (groceryData) {
+                lists = JSON.parse(groceryData);
+            }
+        } else {
+            let result = await db.listDocuments("data", "grocery", [Query.equal("uid", [userId])])
             if (result.total > 0) {
                 for (let i = 0; i < result.documents.length; i++) {
                     console.log(result.documents[i].items)
@@ -85,6 +92,7 @@ export default function ViewGrocery ({ navigation, route }) {
                     lists.push(doc)
                 };
             }
+        }
     }
 
     const refreshData = navigation.addListener('focus', () => {
@@ -93,7 +101,7 @@ export default function ViewGrocery ({ navigation, route }) {
     return refreshData;
   }, [navigation]);
 
-  const delGrocery = () => {
+  const delGrocery = async () => {
     Alert.alert(
       "Delete Grocery List",
       "Are you sure you want to delete this grocery list?",
@@ -103,7 +111,7 @@ export default function ViewGrocery ({ navigation, route }) {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "Delete", onPress: () => {
+        { text: "Delete", onPress: async () => {
           if (!lists[route.params.idx]) {
             Toast.show({
               type: 'error',
@@ -113,14 +121,25 @@ export default function ViewGrocery ({ navigation, route }) {
             return
           }
 
-          db.deleteDocument("data", "grocery", lists[route.params.idx].$id).then(() => {
+          const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+          if (continueWithoutAccount) {
+            await AsyncStorage.removeItem('groceryData');
             Toast.show({
               type: 'success',
               text1: 'Deleted',
               text2: 'Grocery list has been deleted'
             })
-            navigation.goBack()
-          })
+            navigation.goBack();
+          } else {
+            db.deleteDocument("data", "grocery", lists[route.params.idx].$id).then(() => {
+              Toast.show({
+                type: 'success',
+                text1: 'Deleted',
+                text2: 'Grocery list has been deleted'
+              })
+              navigation.goBack()
+            })
+          }
         } }
       ],
       { cancelable: false }

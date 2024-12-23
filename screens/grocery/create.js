@@ -290,27 +290,38 @@ export default function CreateGrocery ({ navigation, route }) {
             data.items.push(cat)
         }
 
-        db.createDocument("data", "grocery", ID.unique(), {uid: userId, items: JSON.stringify(data)}, [
-            Permission.read(Role.user(userId)),
-            Permission.write(Role.user(userId)),
-            Permission.update(Role.user(userId)),
-            Permission.delete(Role.user(userId)),
-          ]).then(function (result) {
-            console.log(result)
+        const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+        if (continueWithoutAccount) {
+            await AsyncStorage.setItem('groceryData', JSON.stringify(data));
             Toast.show({
                 text1: "Success",
                 text2: "Grocery list created successfully",
                 type: "success",
             });
-            navigation.goBack()
-        }).catch(function (error) {
-            console.log(error)
-            Toast.show({
-                text1: "Error",
-                text2: "An error occurred",
-                type: "error",
-            });
-        })
+            navigation.goBack();
+        } else {
+            db.createDocument("data", "grocery", ID.unique(), {uid: userId, items: JSON.stringify(data)}, [
+                Permission.read(Role.user(userId)),
+                Permission.write(Role.user(userId)),
+                Permission.update(Role.user(userId)),
+                Permission.delete(Role.user(userId)),
+              ]).then(function (result) {
+                console.log(result)
+                Toast.show({
+                    text1: "Success",
+                    text2: "Grocery list created successfully",
+                    type: "success",
+                });
+                navigation.goBack()
+            }).catch(function (error) {
+                console.log(error)
+                Toast.show({
+                    text1: "Error",
+                    text2: "An error occurred",
+                    type: "error",
+                });
+            })
+        }
     }
 
     const fromRecipe = () => {

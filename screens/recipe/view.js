@@ -11,7 +11,7 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Storage } from "react-native-appwrite";
-import _, { set, update } from 'lodash';
+import _, { filter, set, update } from 'lodash';
 
 import Dialog from "react-native-dialog";
 import { MenuView } from '@react-native-menu/menu';
@@ -85,104 +85,172 @@ export default function ViewRecipe ({ navigation, route }) {
     recipeId = route.params.idx; 
 
     const getData = async () => {
-      db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-        if (result.total > 0) {
-            for (let i = 0; i < result.documents.length; i++) {
-              let ing = []
-              for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-                ing.push({
-                  ing: result.documents[i].ingredients[j],
-                  serving_amt: result.documents[i].serving_amt[j],
-                  serving_unit: result.documents[i].serving_units[j]
-                });
-              }
-              recipes.push({
-                name: result.documents[i].name,
-                ing: ing,
-                steps: result.documents[i].steps,
-                serving: result.documents[i].servings,
-                recipeId: result.documents[i]['$id'],
-                imageId: result.documents[i].imageId,
-                stepImages: result.documents[i].stepImages,
-                link: result.documents[i].link
-              })
-              filterAllowed.push(i);
-            };
-          }
-    }).then(() => {
-        currentRecipe = _.cloneDeep(recipes[recipeId])
-        let ingl = []
-        for (let i=0; i < currentRecipe['ing'].length; i++) {
-        ingl.push(currentRecipe['ing'][i]['ing'])
-        }
-        setIngList(ingl)
+      const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+      if (continueWithoutAccount) {
+        const recipeData = await AsyncStorage.getItem('recipeData');
+        if (recipeData) {
+          let r = JSON.parse(recipeData);
+          recipes = []; filterAllowed = [];
+          for (let i = 0; i < r.length; i++) {
+            let ing = []
+            for (let j = 0; j < r[i].ingredients.length; j++) {
+              ing.push({
+                ing: r[i].ingredients[j],
+                serving_amt: r[i].serving_amt[j],
+                serving_unit: r[i].serving_units[j]
+              });
+            }
+            recipes.push({
+              name: r[i].name,
+              ing: ing,
+              steps: r[i].steps,
+              serving: r[i].servings,
+              recipeId: r[i].recipeId, // Reference the unique ID
+              stepImages: r[i].stepImages,
+              link: r[i].link
+            })
+            filterAllowed.push(i);
+          };
 
-        if (currentRecipe.imageId) {
-          console.log(currentRecipe.imageId)
-          const file = storage.getFileView("images", currentRecipe.imageId)
-          currentRecipe.imageUrl = file
-          forceUpdate()
+          currentRecipe = _.cloneDeep(recipes[recipeId]);
+          let ingl = [];
+          for (let i = 0; i < currentRecipe['ing'].length; i++) {
+            ingl.push(currentRecipe['ing'][i]['ing']);
+          }
+          setIngList(ingl);
+          setServings(currentRecipe['serving']);
+          forceUpdate();
         }
-    })
+      } else {
+        db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+          if (result.total > 0) {
+              for (let i = 0; i < result.documents.length; i++) {
+                let ing = []
+                for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+                  ing.push({
+                    ing: result.documents[i].ingredients[j],
+                    serving_amt: result.documents[i].serving_amt[j],
+                    serving_unit: result.documents[i].serving_units[j]
+                  });
+                }
+                recipes.push({
+                  name: result.documents[i].name,
+                  ing: ing,
+                  steps: result.documents[i].steps,
+                  serving: result.documents[i].servings,
+                  recipeId: result.documents[i]['$id'],
+                  imageId: result.documents[i].imageId,
+                  stepImages: result.documents[i].stepImages,
+                  link: result.documents[i].link
+                })
+                filterAllowed.push(i);
+              };
+            }
+      }).then(() => {
+          currentRecipe = _.cloneDeep(recipes[recipeId])
+          let ingl = []
+          for (let i=0; i < currentRecipe['ing'].length; i++) {
+          ingl.push(currentRecipe['ing'][i]['ing'])
+          }
+          setIngList(ingl)
+  
+          if (currentRecipe.imageId) {
+            console.log(currentRecipe.imageId)
+            const file = storage.getFileView("images", currentRecipe.imageId)
+            currentRecipe.imageUrl = file
+            forceUpdate()
+          }
+      })
+      }
     }
 
   function handleCancel () {
     setDeleteVisible(false);
   }
 
-  const updateData = () => {
+  const updateData = async () => {
     let ing = [];
     let carbFood = [];
 
     console.log("start")
 
-    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-      console.log("recipes", result)
-      recipes = []
-      for (let i = 0; i < result.documents.length; i++) {
-        let ing = []
-        for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-          ing.push({
-            ing: result.documents[i].ingredients[j],
-            serving_amt: result.documents[i].serving_amt[j],
-            serving_unit: result.documents[i].serving_units[j]
-          });
-        }
-        recipes.push({
-          name: result.documents[i].name,
-          ing: ing,
-          steps: result.documents[i].steps,
-          serving: result.documents[i].servings,
-          recipeId: result.documents[i]['$id'],
-          imageId: result.documents[i].imageId,
-          stepImages: result.documents[i].stepImages,
-          link: result.documents[i].link
-        })
-      };
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+      const recipeData = await AsyncStorage.getItem('recipeData');
+      if (recipeData) {
+        let r = JSON.parse(recipeData);
+        recipes = []
+        filterAllowed = []
+        for (let i = 0; i < r.length; i++) {
+          let ing = []
+          for (let j = 0; j < r[i].ingredients.length; j++) {
+            ing.push({
+              ing: r[i].ingredients[j],
+              serving_amt: r[i].serving_amt[j],
+              serving_unit: r[i].serving_units[j]
+            });
+          }
+          recipes.push({
+            name: r[i].name,
+            ing: ing,
+            steps: r[i].steps,
+            serving: r[i].servings,
+            recipeId: r[i]['$id'],
+            stepImages: r[i].stepImages,
+            link: r[i].link
+          })
+          filterAllowed.push(i);
+        };
+      }
+    } else {
+      db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+        console.log("recipes", result)
+        recipes = []
+        for (let i = 0; i < result.documents.length; i++) {
+          let ing = []
+          for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+            ing.push({
+              ing: result.documents[i].ingredients[j],
+              serving_amt: result.documents[i].serving_amt[j],
+              serving_unit: result.documents[i].serving_units[j]
+            });
+          }
+          recipes.push({
+            name: result.documents[i].name,
+            ing: ing,
+            steps: result.documents[i].steps,
+            serving: result.documents[i].servings,
+            recipeId: result.documents[i]['$id'],
+            imageId: result.documents[i].imageId,
+            stepImages: result.documents[i].stepImages,
+            link: result.documents[i].link
+          })
+        };
+    })
+
+    console.log("recipes", recipes)
+
+    db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
+      console.log("ingredients", result)
+        if (result.total > 0) {
+            mealDB = result.documents[0].items;
+          }
+    })
+    .then(() => {
+
+    for (let i = 0; i < mealDB.length; i++) {
+        ing.push({ id: String(i + 1), title: mealDB[i] });
+        carbFood.push(mealDB[i]);
+    }
+
+    console.log("ing", ing)
+    console.log("carbFood", carbFood)
   })
-
-  console.log("recipes", recipes)
-
-  db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
-    console.log("ingredients", result)
-      if (result.total > 0) {
-          mealDB = result.documents[0].items;
-        }
+  .then (() => {
+    forceUpdate()
   })
-  .then(() => {
-
-  for (let i = 0; i < mealDB.length; i++) {
-      ing.push({ id: String(i + 1), title: mealDB[i] });
-      carbFood.push(mealDB[i]);
-  }
-
-  console.log("ing", ing)
-  console.log("carbFood", carbFood)
-})
-.then (() => {
-  forceUpdate()
-})
-};
+  };
+}
 
   React.useEffect(() => {
     Toast.show({
@@ -191,20 +259,20 @@ export default function ViewRecipe ({ navigation, route }) {
     })
 
     const refreshData = navigation.addListener('focus', () => {
-        recipeId = route.params.idx; 
+        updateData();
+        getData().then(() => {
+          forceUpdate()
+          recipeId = route.params.idx; 
         setRIDTD(route.params.idx); 
         currentRecipe = _.cloneDeep(recipes[recipeId]); 
+        console.log("currentRecipe", recipes)
         let ingl = []
         for (let i=0; i < currentRecipe['ing'].length; i++) {
         ingl.push(currentRecipe['ing'][i]['ing'])
         }
         setIngList(ingl)
         setServings(currentRecipe['serving'])
-        
-      updateData();
-      getData().then(() => {
-        forceUpdate()
-      })
+        })
     })
 
     Toast.hide()
@@ -247,19 +315,34 @@ export default function ViewRecipe ({ navigation, route }) {
                   Are you sure you wnat to delete this recipe? You cannot undo this action.
                 </Dialog.Description>
                 <Dialog.Button label="Cancel" onPress={handleCancel} />
-                <Dialog.Button label="Delete" onPress={() => {
+                <Dialog.Button label="Delete" onPress={async () => {
                   setDeleteVisible(false)
                   Toast.show({
                     type: "info",
                     text1: "Deleting..."
                   })
-                   db.deleteDocument("data", "recipes", recipes[recipeIDToDel].recipeId).then(() => {
-                   navigation.goBack()
-                   Toast.show({
-                    type: "success",
-                    text1: "Deleted!"
-                   })
-                   })
+                  const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+                  if (continueWithoutAccount) {
+                    let localRecipes = await AsyncStorage.getItem('recipeData');
+                    if (localRecipes) {
+                      localRecipes = JSON.parse(localRecipes);
+                      localRecipes = localRecipes.filter(r => r.recipeId !== recipes[recipeIDToDel].recipeId);
+                      await AsyncStorage.setItem('recipeData', JSON.stringify(localRecipes));
+                      Toast.show({
+                        type: 'success',
+                        text1: 'Recipe deleted successfully',
+                      });
+                      navigation.goBack();
+                    }
+                  } else {
+                    db.deleteDocument("data", "recipes", recipes[recipeIDToDel].recipeId).then(() => {
+                      navigation.goBack()
+                      Toast.show({
+                        type: "success",
+                        text1: "Deleted!"
+                      })
+                    })
+                  }
                 }} />
               </Dialog.Container>
 

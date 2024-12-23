@@ -1,4 +1,3 @@
-// Import the necessary libraries
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -54,6 +53,12 @@ export default Login = () => {
       navigation.navigate('app')
     }
   })
+
+  const handleContinue = async () => {
+    await AsyncStorage.setItem('continueWithoutAccount', 'true');
+    await AsyncStorage.setItem('login', 'true');
+    navigation.navigate('app');
+  };
 
   async function register(email, password) {
     let newSignup = false;
@@ -231,6 +236,16 @@ export default Login = () => {
                 status="primary"
                 type="TouchableOpacity"
                 onPress={onLogin}
+              />
+            </View>
+
+            <View style={{ marginBottom: 20 }}>
+              <Button
+                style={{ marginTop: 10 }}
+                text="Continue Without Account"
+                status="primary"
+                type="TouchableOpacity"
+                onPress={() => handleContinue()}
               />
             </View>
           </SectionContent>
