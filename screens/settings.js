@@ -1,4 +1,3 @@
-// Import the necessary libraries
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -32,6 +31,10 @@ const db = new Databases(client);
 const get = async (key) => { try { const value = await AsyncStorage.getItem(key); if (value !== null) { try { return JSON.parse(value) } catch { return value } } } catch (e) { console.log(e) } }
 const delkey = async (key, value) => { try { await AsyncStorage.removeItem(key) } catch (e) { console.log(e) } }
 
+let continueWithoutAccount;
+get('continueWithoutAccount').then(res => {continueWithoutAccount = res})
+
+
 export default Settings = () => {
 
   const { isDarkmode, setTheme } = useTheme();
@@ -42,6 +45,7 @@ export default Settings = () => {
   const [error, setError] = React.useState('');
   const [dialogVisible, setDialogVisible] = React.useState(false);
   const [deleteVisible, setDeleteVisible] = React.useState(false);  
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
   const styles = StyleSheet.create({
     listItem: {
@@ -69,7 +73,17 @@ export default Settings = () => {
   }
 
   const deleteAccount = async () => {
-    get("login").then(res => {
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+      const keys = await AsyncStorage.getAllKeys();
+      await AsyncStorage.multiRemove(keys);
+      Toast.show({
+        type: 'success',
+        text1: 'Local data cleared successfully!'
+      });
+      navigation.navigate('login');
+    } else {
+      get("login").then(res => {
         Toast.show({
             type: 'info',
             text1: 'Deleting data...'
@@ -106,7 +120,8 @@ export default Settings = () => {
                 })
             })
         })
-    })
+      })
+    }
   }
 
 
@@ -143,12 +158,12 @@ export default Settings = () => {
     </Dialog.Container>
 
     <Dialog.Container visible={deleteVisible}>
-        <Dialog.Title>Delete Account</Dialog.Title>
+        <Dialog.Title>{continueWithoutAccount ? 'Clear Data' : 'Delete Account'}</Dialog.Title>
         <Dialog.Description>
-          Are you sure you want to delete your account? This action is irreversible.
+          {continueWithoutAccount ? 'Are you sure you want to clear your local data? This action is irreversible.' : 'Are you sure you want to delete your account? This action is irreversible.'}
         </Dialog.Description>
         <Dialog.Button label="Cancel" onPress={closeDelete} />
-        <Dialog.Button label="Delete Account" onPress={deleteAccount} />
+        <Dialog.Button label={continueWithoutAccount ? 'Clear Data' : 'Delete Account'} onPress={deleteAccount} />
     </Dialog.Container>
 
       <TopNav
@@ -163,6 +178,7 @@ export default Settings = () => {
         middleContent="Settings"
       />
       <ScrollView>
+        {!continueWithoutAccount && 
         <Section style={{ marginHorizontal: 20, marginTop: 20 }}>
           <SectionContent>
             <View>
@@ -212,15 +228,17 @@ export default Settings = () => {
             </View>
           </SectionContent>
         </Section>
+        }
 
         <Button
             style={{ marginTop: 20, marginHorizontal: 20 }}
-            text="Delete Account"
+            text={continueWithoutAccount ? 'Clear Data and Logout' : 'Delete Account'}
             status="danger"
             type="TouchableOpacity"
             onPress={initiateDelete}
             />
 
+          {!continueWithoutAccount &&
           <TouchableOpacity style={{ marginTop: 50 }} onPress={() => {
             // Delete the login information, then go back to login
             delkey("login").then(() => { navigation.navigate("Welcome"); forceUpdate() })
@@ -234,7 +252,8 @@ export default Settings = () => {
               />
             </View>
           </TouchableOpacity>
-
+        }
+          
       </ScrollView>
 
       <Toast />

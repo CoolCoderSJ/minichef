@@ -15,6 +15,8 @@ import Autocomplete from '../../components/autocomplete';
 import SlidePicker from "react-native-slidepicker";
 import {launchImageLibrary} from 'react-native-image-picker';
 import Dialog from "react-native-dialog";
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -36,7 +38,6 @@ let recipe = {
     ing: [],
     steps: [],
     stepImages: [""],
-    recipeId: ID.unique()
 };
 
 let unitBeingEdited = null;
@@ -110,7 +111,6 @@ let stage = 1;
 let userId
 get("login").then(res => userId = res)
 
-
 export default function CreateRecipe () {
   const { isDarkmode, setTheme } = useTheme();
   const navigation = useNavigation();
@@ -125,23 +125,39 @@ export default function CreateRecipe () {
   const [customVisible, setCustomVisible] = React.useState(false);
   const { height: screenHeight } = Dimensions.get('window');
 
-
+  const fetchLocalData = async () => {
+    const ing = await AsyncStorage.getItem('ingredients');
+    if (ing) {
+      let parsedIngredients = JSON.parse(ing);
+      let filter = [];
+      for (let i = 0; i < parsedIngredients.length; i++) {
+        filter.push(parsedIngredients[i]);
+      }
+      setFilterList(filter);
+    }
+  };
+  
   React.useEffect(() => {
     stage = 1;
+    AsyncStorage.getItem('continueWithoutAccount').then((continueWithoutAccount) => {
+      if (continueWithoutAccount) {
+        fetchLocalData(); // Fetch local data
+      } else {
+        db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
+          console.log("ingredients", result)
+          let mealDB = []
+          if (result.total > 0) {
+              mealDB = result.documents[0].items;
+          }
 
-    db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]).then(function (result) {
-        console.log("ingredients", result)
-        let mealDB = []
-        if (result.total > 0) {
-            mealDB = result.documents[0].items;
-        }
-
-        let filter = [];
-        for (let i = 0; i < mealDB.length; i++) {
-            filter.push(mealDB[i]);
-        }
-        setFilterList(filter);
-      })
+          let filter = [];
+          for (let i = 0; i < mealDB.length; i++) {
+              filter.push(mealDB[i]);
+          }
+          setFilterList(filter);
+        })
+      }
+    });
   }, [])
 
   function handleChange(i, type, value) {
@@ -204,33 +220,41 @@ export default function CreateRecipe () {
   const updateIngredients = async () => {
     let allIng = [];
     for (let j = 0; j < recipe.ing.length; j++) {
-        allIng.push(recipe.ing[j].ing.toLowerCase())
+      allIng.push(recipe.ing[j].ing.toLowerCase());
     }
-
-    let result = await db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])])
-    if (result.total > 0) {
-      let dbing = result.documents[0].items;
+  
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+      let localIngredients = await AsyncStorage.getItem('ingredients');
+      if (localIngredients) {
+        let parsedIngredients = JSON.parse(localIngredients);
+        allIng = [...new Set([...allIng, ...parsedIngredients.map(ing => ing.toLowerCase())])];
+      }
+      await AsyncStorage.setItem('ingredients', JSON.stringify(allIng));
+    } else {
+      let result = await db.listDocuments("data", "ingredients", [Query.equal("uid", [userId])]);
+      if (result.total > 0) {
+        let dbing = result.documents[0].items;
         for (let i = 0; i < dbing.length; i++) {
-            allIng.push(dbing[i].toLowerCase())
+          allIng.push(dbing[i].toLowerCase());
         }
+      }
+  
+      allIng = [...new Set(allIng)];
+  
+      try {
+        await db.createDocument("data", "ingredients", userId, { uid: userId, items: allIng }, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+        ]);
+      } catch {
+        await db.updateDocument("data", "ingredients", userId, { items: allIng });
+      }
     }
-
-    allIng = [...new Set(allIng)]
-
-    try {
-      await db.createDocument("data", "ingredients", userId, {uid: userId, items: allIng}, [
-        Permission.read(Role.user(userId)),
-        Permission.write(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-      ]);
-    } 
-
-    catch {
-      await db.updateDocument("data", "ingredients", userId, {items: allIng})
-    }
-  }
-
+  };
+  
 
   async function save () {
     Toast.show({
@@ -263,78 +287,94 @@ export default function CreateRecipe () {
         steps: recipe.steps,
         name: recipe.name,
         servings: Number(recipe.serving),
-        stepImages: []
+        stepImages: [],
+        recipeId: recipe.recipeId // Include the unique ID
     }
 
-    if (recipe.image != "") {
-        storage.createFile("images", ID.unique(), recipe.image, [
-            Permission.read(Role.user(userId)),
-            Permission.write(Role.user(userId)),
-            Permission.update(Role.user(userId)),
-            Permission.delete(Role.user(userId)),
-        ])
-        .then(file => {
-            data['imageId'] = file.$id
-        })
-        .catch(err => console.error(err))
-    }
-    
-    for (let i=0; i<recipe.stepImages.length; i++) {
-        data.stepImages.push("")
-    }
-
-    for (let i=0; i<recipe.stepImages.length; i++) {
-        if (recipe.stepImages[i] != "") {
-            storage.createFile("images", ID.unique(), recipe.stepImages[i], [
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+        data.recipeId = uuidv4()
+        let l = await AsyncStorage.getItem('recipeData');
+        let localData = l ? JSON.parse(l) : [];
+        localData.push(data);
+        console.log("localData", localData)
+        await AsyncStorage.setItem('recipeData', JSON.stringify(localData));
+        Toast.show({
+            text1: "Success",
+            text2: "Recipe created successfully",
+            type: "success",
+        });
+        navigation.goBack();
+    } else {
+        if (recipe.image != "") {
+            storage.createFile("images", ID.unique(), recipe.image, [
                 Permission.read(Role.user(userId)),
                 Permission.write(Role.user(userId)),
                 Permission.update(Role.user(userId)),
                 Permission.delete(Role.user(userId)),
             ])
             .then(file => {
-                data['stepImages'][i] = file.$id
+                data['imageId'] = file.$id
             })
             .catch(err => console.error(err))
         }
-    }
+        
+        for (let i=0; i<recipe.stepImages.length; i++) {
+            data.stepImages.push("")
+        }
 
-    while ((recipe.image != "" && data['imageId'] == undefined) || countOccurrences(data['stepImages'], "") > countOccurrences(recipe.stepImages, "")) {
-        await new Promise(r => setTimeout(r, 500));
-    }
-    try {
-    await db.createDocument("data", "recipes", recipe.recipeId, data, [
-        Permission.read(Role.user(userId)),
-        Permission.write(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-    ]);
+        for (let i=0; i<recipe.stepImages.length; i++) {
+            if (recipe.stepImages[i] != "") {
+                storage.createFile("images", ID.unique(), recipe.stepImages[i], [
+                    Permission.read(Role.user(userId)),
+                    Permission.write(Role.user(userId)),
+                    Permission.update(Role.user(userId)),
+                    Permission.delete(Role.user(userId)),
+                ])
+                .then(file => {
+                    data['stepImages'][i] = file.$id
+                })
+                .catch(err => console.error(err))
+            }
+        }
 
-    Toast.show({
-        type: 'success',
-        text1: 'Saved!',
-    });
-    }
-
-    catch (err) {
-        console.warn(err)
+        while ((recipe.image != "" && data['imageId'] == undefined) || countOccurrences(data['stepImages'], "") > countOccurrences(recipe.stepImages, "")) {
+            await new Promise(r => setTimeout(r, 500));
+        }
         try {
-            await db.updateDocument("data", "recipes", recipe.recipeId, data, [
-                Permission.read(Role.user(userId)),
-                Permission.write(Role.user(userId)),
-                Permission.update(Role.user(userId)),
-                Permission.delete(Role.user(userId)),
-            ]);
+        await db.createDocument("data", "recipes", recipe.recipeId, data, [
+            Permission.read(Role.user(userId)),
+            Permission.write(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+        ]);
+
+        Toast.show({
+            type: 'success',
+            text1: 'Saved!',
+        });
         }
+
         catch (err) {
-            console.error(err)
+            console.warn(err)
+            try {
+                await db.updateDocument("data", "recipes", recipe.recipeId, data, [
+                    Permission.read(Role.user(userId)),
+                    Permission.write(Role.user(userId)),
+                    Permission.update(Role.user(userId)),
+                    Permission.delete(Role.user(userId)),
+                ]);
+            }
+            catch (err) {
+                console.error(err)
+            }
+
+        Toast.show({
+            type: 'success',
+            text1: 'Saved!',
+        });
         }
-
-    Toast.show({
-        type: 'success',
-        text1: 'Saved!',
-    });
     }
-
   }
 
 

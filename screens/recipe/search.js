@@ -12,6 +12,8 @@ import {
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Functions, Storage, Permission, Role, ID } from "react-native-appwrite";
 import _, { set, update } from 'lodash';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 const client = new Client()
     .setEndpoint('https://appwrite.shuchir.dev/v1') // Your API Endpoint
@@ -134,7 +136,7 @@ export default function SearchRecipes () {
                         )
 
                         recipes = JSON.parse(result.responseBody).hits
-                        console.log(recipes) 
+                        // console.log(recipes) 
                         forceUpdate()
                     }}
                 />
@@ -207,34 +209,59 @@ export default function SearchRecipes () {
                                             false
                                         )
                                         let fileId = exec.responseBody
-                                        console.log(fileId)
+                                        // console.log(fileId)
 
-                                        let data = {
-                                            uid: userId,
-                                            ingredients: ingredients,
-                                            serving_units: serving_units,
-                                            serving_amt: serving_amt,
-                                            steps: ["This recipe was imported from a website. Please view the original recipe for instructions."],
-                                            name: recipe.recipe.label,
-                                            servings: Number(recipe.recipe.yield),
-                                            link: recipe.recipe.url,
-                                            imageId: fileId,
-                                            stepImages: []
+                                        const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+                                        if (continueWithoutAccount) {
+                                            let localRecipes = await AsyncStorage.getItem('recipeData');
+                                            localRecipes = localRecipes ? JSON.parse(localRecipes) : [];
+                                            console.log("LOCAL", localRecipes)
+                                            localRecipes.push({
+                                                ingredients: ingredients,
+                                                serving_units: serving_units,
+                                                serving_amt: serving_amt,
+                                                steps: ["This recipe was imported from a website. Please view the original recipe for instructions."],
+                                                name: recipe.recipe.label,
+                                                servings: Number(recipe.recipe.yield),
+                                                link: recipe.recipe.url,
+                                                image: recipe.recipe.image,
+                                                stepImages: [],
+                                                recipeId: uuidv4() // Generate a unique ID
+                                            });
+                                            await AsyncStorage.setItem('recipeData', JSON.stringify(localRecipes));
+                                            Toast.show({
+                                                type: 'success',
+                                                text1: 'Recipe saved locally!',
+                                            });
+                                            navigation.navigate("AllRecipes");
+                                        } else {
+                                            let data = {
+                                                uid: userId,
+                                                ingredients: ingredients,
+                                                serving_units: serving_units,
+                                                serving_amt: serving_amt,
+                                                steps: ["This recipe was imported from a website. Please view the original recipe for instructions."],
+                                                name: recipe.recipe.label,
+                                                servings: Number(recipe.recipe.yield),
+                                                link: recipe.recipe.url,
+                                                imageId: fileId,
+                                                stepImages: []
+                                            }
+
+                                            // console.log(data)
+
+                                            await db.createDocument("data", "recipes", ID.unique(), data, [
+                                                Permission.read(Role.user(userId)),
+                                                Permission.write(Role.user(userId)),
+                                                Permission.update(Role.user(userId)),
+                                                Permission.delete(Role.user(userId)),
+                                            ])
+                                            Toast.show({
+                                                type: 'success',
+                                                text1: 'Recipe saved!',
+                                            })
+                                            navigation.navigate("AllRecipes")
                                         }
-
-                                        console.log(data)
-
-                                        await db.createDocument("data", "recipes", ID.unique(), data, [
-                                            Permission.read(Role.user(userId)),
-                                            Permission.write(Role.user(userId)),
-                                            Permission.update(Role.user(userId)),
-                                            Permission.delete(Role.user(userId)),
-                                        ])
-                                        Toast.show({
-                                            type: 'success',
-                                            text1: 'Recipe saved!',
-                                        })
-                                        navigation.navigate("AllRecipes")
                                     }}
                                 />
                             </View>

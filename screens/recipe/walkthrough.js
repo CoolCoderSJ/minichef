@@ -75,43 +75,68 @@ export default function Walkthrough ({ navigation, route }) {
 
   React.useEffect(() => {
     currentIndex = 0;
-    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-        if (result.total > 0) {
-            for (let i = 0; i < result.documents.length; i++) {
-              let ing = []
-              for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-                ing.push({
-                  ing: result.documents[i].ingredients[j],
-                  serving_amt: result.documents[i].serving_amt[j],
-                  serving_unit: result.documents[i].serving_units[j]
-                });
-              }
-              recipes.push({
-                name: result.documents[i].name,
-                ing: ing,
-                steps: result.documents[i].steps,
-                serving: result.documents[i].servings,
-                recipeId: result.documents[i]['$id']
-              })
-            };
+    const fetchData = async () => {
+      const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+      if (continueWithoutAccount) {
+        const recipeData = await AsyncStorage.getItem('recipeData');
+        if (recipeData) {
+          let r = JSON.parse(recipeData);
+          recipes = []
+          for (let i = 0; i < r.length; i++) {
+            let ing = []
+            for (let j = 0; j < r[i].ingredients.length; j++) {
+              ing.push({
+                ing: r[i].ingredients[j],
+                serving_amt: r[i].serving_amt[j],
+                serving_unit: r[i].serving_units[j]
+              });
+            }
+            recipes.push({
+              name: r[i].name,
+              ing: ing,
+              steps: r[i].steps,
+              serving: r[i].servings,
+              recipeId: r[i]['$id']
+            })
           }
-    })
-    .then(() => {
-        currentRecipe = _.cloneDeep(recipes[recipeId])
-        setServings(route.params.servings)
-
-        console.log("RECIPE", recipes[recipeId], currentRecipe)
-        for (let i=0; i < recipes[recipeId]['ing'].length; i++) {
-            currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(route.params.servings)
         }
-        
-        let ingl = []
-        for (let i=0; i < currentRecipe['ing'].length; i++) {
-        ingl.push(currentRecipe['ing'][i]['ing'])
+      } else {
+        const result = await db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]);
+        if (result.total > 0) {
+          for (let i = 0; i < result.documents.length; i++) {
+            let ing = [];
+            for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+              ing.push({
+                ing: result.documents[i].ingredients[j],
+                serving_amt: result.documents[i].serving_amt[j],
+                serving_unit: result.documents[i].serving_units[j]
+              });
+            }
+            recipes.push({
+              name: result.documents[i].name,
+              ing: ing,
+              steps: result.documents[i].steps,
+              serving: result.documents[i].servings,
+              recipeId: result.documents[i]['$id']
+            });
+          }
         }
-        setIngList(ingl)
-    })
+      }
+      currentRecipe = _.cloneDeep(recipes[recipeId]);
+      setServings(route.params.servings);
 
+      for (let i = 0; i < recipes[recipeId]['ing'].length; i++) {
+        currentRecipe['ing'][i]['serving_amt'] = Number(recipes[recipeId]['ing'][i]['serving_amt']) / Number(recipes[recipeId]['serving']) * Number(route.params.servings);
+      }
+
+      let ingl = [];
+      for (let i = 0; i < currentRecipe['ing'].length; i++) {
+        ingl.push(currentRecipe['ing'][i]['ing']);
+      }
+      setIngList(ingl);
+    };
+
+    fetchData();
   }, []);
 
 

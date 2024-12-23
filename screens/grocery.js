@@ -74,18 +74,26 @@ function Grocery () {
 
     const updateData = async () => {
         lists = []
-        let result = await db.listDocuments("data", "grocery", [Query.equal("uid", [userId])])
-        if (result.total > 0) {
-            for (let i = 0; i < result.documents.length; i++) {
-                console.log(result.documents[i].items)
-                let doc = JSON.parse(result.documents[i].items)
-                doc.createdAt = result.documents[i].$createdAt
-                let arr = new Date(doc.createdAt).toDateString().split(" ")
-                doc.createdAt = `${arr[1]} ${arr[2]} ${arr[3]}`
-                lists.push(doc)
-            };
+        const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+        if (continueWithoutAccount) {
+          const groceryData = await AsyncStorage.getItem('groceryData');
+          if (groceryData) {
+            lists = JSON.parse(groceryData);
+          }
+        } else {
+          let result = await db.listDocuments("data", "grocery", [Query.equal("uid", [userId])])
+          if (result.total > 0) {
+              for (let i = 0; i < result.documents.length; i++) {
+                  console.log(result.documents[i].items)
+                  let doc = JSON.parse(result.documents[i].items)
+                  doc.createdAt = result.documents[i].$createdAt
+                  let arr = new Date(doc.createdAt).toDateString().split(" ")
+                  doc.createdAt = `${arr[1]} ${arr[2]} ${arr[3]}`
+                  lists.push(doc)
+              };
+          }
         }
-    }
+      }
 
     const refreshData = navigation.addListener('focus', () => {
       updateData().then(() => {Toast.hide(); forceUpdate()});

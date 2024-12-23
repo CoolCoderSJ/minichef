@@ -11,7 +11,7 @@ import {
 } from "react-native-rapi-ui";
 import Toast from 'react-native-toast-message';
 import { Client, Databases, Query, Storage, Functions } from "react-native-appwrite";
-import _, { set, update } from 'lodash';
+import _, { filter, set, update } from 'lodash';
 import PTRView from 'react-native-pull-to-refresh';
 import RNRestart from 'react-native-restart';
 
@@ -35,6 +35,8 @@ let filterAllowed = []
 let AIUrl = null;
 
 let userId
+get("continueWithoutAccount").then(res => {
+if (res) return;
 get("login").then(res => userId = res)
 .then(() => {
 db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
@@ -59,6 +61,7 @@ db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(functio
           filterAllowed.push(i);
         };
       }
+})
 })
 })
 
@@ -95,34 +98,61 @@ function Recipes() {
   const updateData = async () => {
     console.log("start")
 
-    db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
-      console.log("recipes", result)
-      recipes = []
-      for (let i = 0; i < result.documents.length; i++) {
-        let ing = []
-        for (let j = 0; j < result.documents[i].ingredients.length; j++) {
-          ing.push({
-            ing: result.documents[i].ingredients[j],
-            serving_amt: result.documents[i].serving_amt[j],
-            serving_unit: result.documents[i].serving_units[j]
-          });
-        }
-        recipes.push({
-          name: result.documents[i].name,
-          ing: ing,
-          steps: result.documents[i].steps,
-          serving: result.documents[i].servings,
-          recipeId: result.documents[i]['$id'],
-          imageId: result.documents[i].imageId
-        })
-      };
-  }).then(() => {
+    const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+    if (continueWithoutAccount) {
+      const recipeData = await AsyncStorage.getItem('recipeData');
+      if (recipeData) {
+        let r = JSON.parse(recipeData);
+        recipes = []
+        filterAllowed = []
+        for (let i = 0; i < r.length; i++) {
+          let ing = []
+          for (let j = 0; j < r[i].ingredients.length; j++) {
+            ing.push({
+              ing: r[i].ingredients[j],
+              serving_amt: r[i].serving_amt[j],
+              serving_unit: r[i].serving_units[j]
+            });
+          }
+          recipes.push({
+            name: r[i].name,
+            ing: ing,
+            steps: r[i].steps,
+            serving: r[i].servings,
+            recipeId: r[i]['$id'],
+          })
+          filterAllowed.push(i);
+        };
+      }
+    } else {
+      db.listDocuments("data", "recipes", [Query.equal("uid", [userId])]).then(function (result) {
+        console.log("recipes", result)
+        recipes = []
+        for (let i = 0; i < result.documents.length; i++) {
+          let ing = []
+          for (let j = 0; j < result.documents[i].ingredients.length; j++) {
+            ing.push({
+              ing: result.documents[i].ingredients[j],
+              serving_amt: result.documents[i].serving_amt[j],
+              serving_unit: result.documents[i].serving_units[j]
+            });
+          }
+          recipes.push({
+            name: result.documents[i].name,
+            ing: ing,
+            steps: result.documents[i].steps,
+            serving: result.documents[i].servings,
+            recipeId: result.documents[i]['$id'],
+            imageId: result.documents[i].imageId
+          })
+        };
+      }).then(() => {
+        forceUpdate()
+      })
+    }
+
+    console.log("recipes", recipes)
     forceUpdate()
-  })
-
-  console.log("recipes", recipes)
-
-  forceUpdate()
   };
 
   React.useEffect(() => {
@@ -303,7 +333,15 @@ function Recipes() {
                 }
                 status="primary"
                 type="TouchableOpacity"
-                onPress={() => {
+                onPress={async () => {
+                  const continueWithoutAccount = await AsyncStorage.getItem('continueWithoutAccount');
+                  if (continueWithoutAccount) {
+                    Toast.show({
+                      type: "error",
+                      text1: "Importing from URL is not available in offline mode."
+                    });
+                    return;
+                  }
                   Toast.show({
                     type: 'info',
                     text1: 'Importing... (this may take a while)',
